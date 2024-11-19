@@ -101,6 +101,9 @@ class PanopticAnnotatorWidget(QWidget):
             "Annotator", self.semantic_annotation_group.gbox
         )
 
+        self.add_connections()
+        self.select_layer()
+
         # Setup radio buttons for class selection
         self.class_buttons = QButtonGroup(
             self
@@ -113,9 +116,6 @@ class PanopticAnnotatorWidget(QWidget):
             class_layout.addWidget(btn)
             if cls == INITIAL_SELECTED_CLASS:
                 btn.setChecked(True)  # Set default selected class
-
-        self.add_connections()
-        self.select_layer()
 
     def add_connections(self):
         self.select_layer_widget.changed.connect(self.select_layer)
