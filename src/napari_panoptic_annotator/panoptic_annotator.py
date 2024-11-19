@@ -73,19 +73,15 @@ class PanopticAnnotatorWidget(QWidget):
         self.add_connections()
         self.select_layer()
 
-        def add_connections(self):
-            self.select_layer_widget.changed.connect(self.select_layer)
-            self.select_annotation_layer_widget.changed.connect(
-                self.select_layer
-            )
+    def add_connections(self):
+        self.select_layer_widget.changed.connect(self.select_layer)
+        self.select_annotation_layer_widget.changed.connect(self.select_layer)
 
-        def select_layer(self, newtext=None):
-            self.selected_layer = self.select_layer_widget.native.currentText()
-            self.selected_annotation_layer = (
-                self.select_annotation_layer_widget.native.currentText()
-            )
+    def select_layer(self, newtext=None):
+        self.selected_layer = self.select_layer_widget.native.currentText()
+        self.selected_annotation_layer = (
+            self.select_annotation_layer_widget.native.currentText()
+        )
 
-            print(f"Selected layer: {self.selected_layer}")
-            print(
-                f"Selected annotation layer: {self.selected_annotation_layer}"
-            )
+        print(f"Selected layer: {self.selected_layer}")
+        print(f"Selected annotation layer: {self.selected_annotation_layer}")
