@@ -1,8 +1,9 @@
 import napari
+import numpy as np
 from magicgui.widgets import create_widget
 from napari_guitils.gui_structures import TabSet, VHGroup
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QLabel, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
 
 
 class PanopticAnnotatorWidget(QWidget):
@@ -47,7 +48,7 @@ class PanopticAnnotatorWidget(QWidget):
         )
         # annotation layer
         self.select_annotation_layer_widget = create_widget(
-            annotation=napari.layers.Labels, label="Pick segmentation"
+            annotation=napari.layers.Points, label="Pick segmentation"
         )
         self.select_annotation_layer_widget.reset_choices()
         self.viewer.layers.events.inserted.connect(
@@ -58,16 +59,21 @@ class PanopticAnnotatorWidget(QWidget):
         )
 
         self.layer_selection_group.glayout.addWidget(
-            QLabel("Image layer"), 0, 0, 1, 1
+            QLabel("Segmentation layer"), 0, 0, 1, 1
         )
         self.layer_selection_group.glayout.addWidget(
             self.select_layer_widget.native, 0, 1, 1, 1
         )
         self.layer_selection_group.glayout.addWidget(
-            QLabel("Segmentation layer"), 1, 0, 1, 1
+            QLabel("Annotation layer"), 1, 0, 1, 1
         )
         self.layer_selection_group.glayout.addWidget(
             self.select_annotation_layer_widget.native, 1, 1, 1, 1
+        )
+
+        self.add_annotation_layer_btn = QPushButton("Add annotation layer")
+        self.layer_selection_group.glayout.addWidget(
+            self.add_annotation_layer_btn, 2, 0, 1, 2
         )
 
         self.add_connections()
@@ -85,3 +91,25 @@ class PanopticAnnotatorWidget(QWidget):
 
         print(f"Selected layer: {self.selected_layer}")
         print(f"Selected annotation layer: {self.selected_annotation_layer}")
+
+    def add_annotation_layer(self):
+        if self.selected_layer is None:
+            print("No segmentation layer selected")
+            return
+        if self.selected_annotation_layer is None:
+            segmentation_layer = self.viewer.layers[self.selected_layer]
+            z_dim = (
+                segmentation_layer.data.shape[0]
+                if segmentation_layer.ndim == 3
+                else None
+            )
+            initial_data = (
+                np.zeros((0, 3)) if z_dim else np.zeros((0, 2))
+            )  # Use ternary operator to set initial_data size
+            self.annotation_layer = self.viewer.add_points(
+                initial_data, name="Annotations", ndim=3 if z_dim else 2
+            )
+            print(
+                f"Annotation layer added with {'3D' if z_dim else '2D'} capabilities."
+            )
+            self.selected_annotation_layer = self.points_layer.name
