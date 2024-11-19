@@ -162,10 +162,7 @@ class PanopticAnnotatorWidget(QWidget):
             self.update_point_tool_color()
 
     def update_point_tool_color(self):
-        if (
-            self.selected_annotation_layer is None
-            or self.selected_layer is None
-        ):
+        if self.selected_annotation_layer == "" or self.selected_layer == "":
             print(
                 "No annotation layer selected or no segmentation layer selected."
             )
