@@ -6,6 +6,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QButtonGroup,
     QLabel,
+    QLineEdit,
     QPushButton,
     QRadioButton,
     QVBoxLayout,
@@ -66,7 +67,7 @@ class PanopticAnnotatorWidget(QWidget):
         )
         # annotation layer
         self.select_annotation_layer_widget = create_widget(
-            annotation=napari.layers.Points, label="Pick segmentation"
+            annotation=napari.layers.Points, label="Pick annotation"
         )
         self.select_annotation_layer_widget.reset_choices()
         self.viewer.layers.events.inserted.connect(
@@ -94,6 +95,15 @@ class PanopticAnnotatorWidget(QWidget):
             self.add_annotation_layer_btn, 2, 0, 1, 2
         )
 
+        # Let the user define the axes order
+        self.axes_order = QLineEdit("")
+        self.layer_selection_group.glayout.addWidget(
+            QLabel("Axes order"), 3, 0, 1, 1
+        )
+        self.layer_selection_group.glayout.addWidget(
+            self.axes_order, 3, 1, 1, 1
+        )
+
         self.semantic_annotation_group = VHGroup(
             "Semantic annotation", orientation="G"
         )
@@ -117,11 +127,17 @@ class PanopticAnnotatorWidget(QWidget):
             if cls == INITIAL_SELECTED_CLASS:
                 btn.setChecked(True)  # Set default selected class
 
+        self.save_annotations_btn = QPushButton("Save annotations")
+
         self.semantic_annotation_group.glayout.addWidget(
             QLabel("Select class"), 0, 0, 1, 1
         )
         self.semantic_annotation_group.glayout.addLayout(
             class_layout, 0, 1, 1, 1
+        )
+
+        self.semantic_annotation_group.glayout.addWidget(
+            self.save_annotations_btn, 1, 0, 1, 2
         )
 
         self.selected_class = INITIAL_SELECTED_CLASS
@@ -137,6 +153,7 @@ class PanopticAnnotatorWidget(QWidget):
         self.add_annotation_layer_btn.clicked.connect(
             self.add_annotation_layer
         )
+        self.save_annotations_btn.clicked.connect(self.save_annotations)
 
     def select_layer(self, newtext=None):
         self.selected_layer = self.select_layer_widget.native.currentText()
@@ -146,6 +163,13 @@ class PanopticAnnotatorWidget(QWidget):
 
         print(f"Selected layer: {self.selected_layer}")
         print(f"Selected annotation layer: {self.selected_annotation_layer}")
+
+        if self.selected_layer != "":
+            segmentation_layer = self.viewer.layers[self.selected_layer]
+            if segmentation_layer.ndim == 3:
+                self.axes_order.setText("ZYX")
+            else:
+                self.axes_order.setText("YX")
 
     def add_annotation_layer(self):
         if self.selected_layer == "":
@@ -193,7 +217,7 @@ class PanopticAnnotatorWidget(QWidget):
             f"Ready to add points with color {self.class_colors[self.selected_class]} for class {self.selected_class}."
         )
 
-    def cycle_class_up(self, event):
+    def cycle_class_down(self, event):
         current_idx = CLASSES.index(self.selected_class)
         new_idx = current_idx + 1
         if new_idx >= len(CLASSES):
@@ -207,7 +231,7 @@ class PanopticAnnotatorWidget(QWidget):
             if btn.text() == self.selected_class:
                 btn.setChecked(True)
 
-    def cycle_class_down(self, event):
+    def cycle_class_up(self, event):
         current_idx = CLASSES.index(self.selected_class)
         new_idx = current_idx - 1
         if new_idx < 0:
@@ -220,3 +244,15 @@ class PanopticAnnotatorWidget(QWidget):
         for btn in self.class_buttons.buttons():
             if btn.text() == self.selected_class:
                 btn.setChecked(True)
+
+    def save_annotations(self):
+        if self.selected_annotation_layer == "":
+            print("No annotation layer selected")
+            return
+
+        annotation_layer = self.viewer.layers[self.selected_annotation_layer]
+        annotation_data = annotation_layer.data
+        print(f"Saving {annotation_data.shape[0]} annotations")
+        # Save the annotations to a file
+
+        print(annotation_data)
