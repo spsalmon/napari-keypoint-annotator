@@ -127,6 +127,10 @@ class PanopticAnnotatorWidget(QWidget):
         self.selected_class = INITIAL_SELECTED_CLASS
         self.class_colors = CLASS_COLORS
 
+        # bind the key shortcuts (up and down arrows) to cycle through classes
+        self.viewer.bind_key("up", self.cycle_class_up)
+        self.viewer.bind_key("down", self.cycle_class_down)
+
     def add_connections(self):
         self.select_layer_widget.changed.connect(self.select_layer)
         self.select_annotation_layer_widget.changed.connect(self.select_layer)
@@ -147,7 +151,10 @@ class PanopticAnnotatorWidget(QWidget):
         if self.selected_layer == "":
             print("No segmentation layer selected")
             return
-        if self.selected_annotation_layer == "":
+        if (
+            self.selected_annotation_layer == ""
+            or self.selected_annotation_layer not in self.viewer.layers
+        ):
             segmentation_layer = self.viewer.layers[self.selected_layer]
             z_dim = (
                 segmentation_layer.data.shape[0]
@@ -164,6 +171,8 @@ class PanopticAnnotatorWidget(QWidget):
                 f"Annotation layer added with {'3D' if z_dim else '2D'} capabilities."
             )
             self.selected_annotation_layer = self.annotation_layer.name
+
+            self.update_point_tool_color()
 
     def on_class_selected(self, checked):
         radio_button = self.sender()
@@ -182,3 +191,15 @@ class PanopticAnnotatorWidget(QWidget):
         print(
             f"Ready to add points with color {self.class_colors[self.selected_class]} for class {self.selected_class}."
         )
+
+    def cycle_class_up(self):
+        current_idx = CLASSES.index(self.selected_class)
+        new_idx = (current_idx + 1) % len(CLASSES)
+        self.selected_class = CLASSES[new_idx]
+        self.update_point_tool_color()
+
+    def cycle_class_down(self):
+        current_idx = CLASSES.index(self.selected_class)
+        new_idx = (current_idx - 1) % len(CLASSES)
+        self.selected_class = CLASSES[new_idx]
+        self.update_point_tool_color()
