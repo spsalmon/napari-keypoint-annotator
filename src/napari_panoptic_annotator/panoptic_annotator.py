@@ -134,10 +134,10 @@ class PanopticAnnotatorWidget(QWidget):
         print(f"Selected annotation layer: {self.selected_annotation_layer}")
 
     def add_annotation_layer(self):
-        if self.selected_layer is None:
+        if self.selected_layer == "":
             print("No segmentation layer selected")
             return
-        if self.selected_annotation_layer is None:
+        if self.selected_annotation_layer == "":
             segmentation_layer = self.viewer.layers[self.selected_layer]
             z_dim = (
                 segmentation_layer.data.shape[0]
@@ -159,15 +159,10 @@ class PanopticAnnotatorWidget(QWidget):
         radio_button = self.sender()
         if checked:
             self.selected_class = radio_button.text()
-            self.update_point_tool_color()
+            if self.selected_annotation_layer != "":
+                self.update_point_tool_color()
 
     def update_point_tool_color(self):
-        if self.selected_annotation_layer == "" or self.selected_layer == "":
-            print(
-                "No annotation layer selected or no segmentation layer selected."
-            )
-            return
-
         # Deselect all points
         self.viewer.layers[self.selected_annotation_layer].selected_data = []
         # Set the current face color to the selected class color
