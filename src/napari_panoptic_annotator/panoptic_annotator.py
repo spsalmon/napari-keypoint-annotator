@@ -117,6 +117,16 @@ class PanopticAnnotatorWidget(QWidget):
             if cls == INITIAL_SELECTED_CLASS:
                 btn.setChecked(True)  # Set default selected class
 
+        self.semantic_annotation_group.glayout.addWidget(
+            QLabel("Select class"), 0, 0, 1, 1
+        )
+        self.semantic_annotation_group.glayout.addLayout(
+            class_layout, 0, 1, 1, 1
+        )
+
+        self.selected_class = INITIAL_SELECTED_CLASS
+        self.class_colors = CLASS_COLORS
+
     def add_connections(self):
         self.select_layer_widget.changed.connect(self.select_layer)
         self.select_annotation_layer_widget.changed.connect(self.select_layer)
@@ -153,7 +163,7 @@ class PanopticAnnotatorWidget(QWidget):
             print(
                 f"Annotation layer added with {'3D' if z_dim else '2D'} capabilities."
             )
-            self.selected_annotation_layer = self.points_layer.name
+            self.selected_annotation_layer = self.annotation_layer.name
 
     def on_class_selected(self, checked):
         radio_button = self.sender()
