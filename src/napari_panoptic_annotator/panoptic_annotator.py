@@ -192,14 +192,26 @@ class PanopticAnnotatorWidget(QWidget):
             f"Ready to add points with color {self.class_colors[self.selected_class]} for class {self.selected_class}."
         )
 
-    def cycle_class_up(self):
+    def cycle_class_up(self, event):
         current_idx = CLASSES.index(self.selected_class)
         new_idx = (current_idx + 1) % len(CLASSES)
+
         self.selected_class = CLASSES[new_idx]
         self.update_point_tool_color()
 
-    def cycle_class_down(self):
+        # Update the radio buttons
+        for btn in self.class_buttons.buttons():
+            if btn.text() == self.selected_class:
+                btn.setChecked(True)
+
+    def cycle_class_down(self, event):
         current_idx = CLASSES.index(self.selected_class)
         new_idx = (current_idx - 1) % len(CLASSES)
+
         self.selected_class = CLASSES[new_idx]
         self.update_point_tool_color()
+
+        # Update the radio buttons
+        for btn in self.class_buttons.buttons():
+            if btn.text() == self.selected_class:
+                btn.setChecked(True)
