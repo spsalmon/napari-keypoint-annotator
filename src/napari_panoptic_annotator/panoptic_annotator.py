@@ -1,5 +1,6 @@
 import napari
 import numpy as np
+import pandas as pd
 from magicgui.widgets import create_widget
 from napari_guitils.gui_structures import TabSet, VHGroup
 from qtpy.QtCore import Qt
@@ -137,8 +138,21 @@ class PanopticAnnotatorWidget(QWidget):
             self.save_annotations_btn, 1, 0, 1, 2
         )
 
+        self.class_values = CLASS_VALUES
         self.selected_class = INITIAL_SELECTED_CLASS
         self.class_colors = CLASS_COLORS
+        # Map colors to class values using tuples as keys
+        self.color_to_class = {
+            self.class_colors[cls]: self.class_values[cls]
+            for cls in self.class_colors
+        }
+        self.class_values_to_color = {
+            self.class_values[cls]: self.class_colors[cls]
+            for cls in self.class_colors
+        }
+        self.class_values_to_name = {
+            self.class_values[cls]: cls for cls in self.class_colors
+        }
 
         # bind the key shortcuts (up and down arrows) to cycle through classes
         self.viewer.bind_key("up", self.cycle_class_up)
@@ -250,9 +264,45 @@ class PanopticAnnotatorWidget(QWidget):
             print("No annotation layer selected")
             return
 
+        segmentation_layer = self.viewer.layers[self.selected_layer]
         annotation_layer = self.viewer.layers[self.selected_annotation_layer]
         annotation_data = annotation_layer.data
+        label_data = segmentation_layer.data
         print(f"Saving {annotation_data.shape[0]} annotations")
         # Save the annotations to a file
 
         print(annotation_data)
+
+        three_dimentional = len(self.axes_order.text()) == 3
+        columns = []
+        if three_dimentional:
+            columns.append(self.axes_order.text()[0])
+
+        rows = []
+        for point, color in zip(annotation_data, annotation_layer.face_color):
+            point = tuple(int(p) for p in point)
+            label_value = label_data[tuple(point)]
+            class_value = self.color_to_class.get(tuple(color), -1)
+            class_name = self.class_values_to_name.get(class_value, "unknown")
+            print(
+                f"Point {point} is in class {class_name} with value {class_value}"
+            )
+
+            if three_dimentional:
+                row = {
+                    self.axes_order.text()[0]: point[0],
+                    "Label": label_value,
+                    "ClassID": class_value,
+                    "Class": class_name,
+                }
+            else:
+                row = {
+                    "Label": label_value,
+                    "ClassID": class_value,
+                    "Class": class_name,
+                }
+            rows.append(row)
+
+        annotations_df = pd.DataFrame(rows, columns=columns)
+
+        print(annotations_df)
