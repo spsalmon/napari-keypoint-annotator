@@ -178,10 +178,11 @@ class PanopticAnnotatorWidget(QWidget):
         radio_button = self.sender()
         if checked:
             self.selected_class = radio_button.text()
-            if self.selected_annotation_layer != "":
-                self.update_point_tool_color()
+            self.update_point_tool_color()
 
     def update_point_tool_color(self):
+        if self.selected_annotation_layer != "":
+            return
         # Deselect all points
         self.viewer.layers[self.selected_annotation_layer].selected_data = []
         # Set the current face color to the selected class color
@@ -194,7 +195,9 @@ class PanopticAnnotatorWidget(QWidget):
 
     def cycle_class_up(self, event):
         current_idx = CLASSES.index(self.selected_class)
-        new_idx = (current_idx + 1) % len(CLASSES)
+        new_idx = current_idx + 1
+        if new_idx >= len(CLASSES):
+            new_idx = 0
 
         self.selected_class = CLASSES[new_idx]
         self.update_point_tool_color()
@@ -206,7 +209,9 @@ class PanopticAnnotatorWidget(QWidget):
 
     def cycle_class_down(self, event):
         current_idx = CLASSES.index(self.selected_class)
-        new_idx = (current_idx - 1) % len(CLASSES)
+        new_idx = current_idx - 1
+        if new_idx < 0:
+            new_idx = len(CLASSES) - 1
 
         self.selected_class = CLASSES[new_idx]
         self.update_point_tool_color()
