@@ -111,9 +111,6 @@ class PanopticAnnotatorWidget(QWidget):
             "Annotator", self.semantic_annotation_group.gbox
         )
 
-        self.add_connections()
-        self.select_layer()
-
         # Setup radio buttons for class selection
         self.class_buttons = QButtonGroup(
             self
@@ -146,6 +143,9 @@ class PanopticAnnotatorWidget(QWidget):
         # bind the key shortcuts (up and down arrows) to cycle through classes
         self.viewer.bind_key("up", self.cycle_class_up)
         self.viewer.bind_key("down", self.cycle_class_down)
+
+        self.select_layer()
+        self.add_connections()
 
     def add_connections(self):
         self.select_layer_widget.changed.connect(self.select_layer)
