@@ -181,7 +181,7 @@ class PanopticAnnotatorWidget(QWidget):
             self.update_point_tool_color()
 
     def update_point_tool_color(self):
-        if self.selected_annotation_layer != "":
+        if self.selected_annotation_layer == "":
             return
         # Deselect all points
         self.viewer.layers[self.selected_annotation_layer].selected_data = []
