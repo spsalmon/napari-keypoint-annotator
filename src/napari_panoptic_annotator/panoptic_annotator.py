@@ -274,13 +274,9 @@ class PanopticAnnotatorWidget(QWidget):
         print(annotation_data)
 
         three_dimentional = len(self.axes_order.text()) == 3
-        columns = []
-        if three_dimentional:
-            columns.append(self.axes_order.text()[0])
-
         rows = []
         for point, color in zip(annotation_data, annotation_layer.face_color):
-            point = tuple(int(p) for p in point)
+            point = tuple(round(p) for p in point)
             label_value = label_data[tuple(point)]
             class_value = self.color_to_class.get(tuple(color), -1)
             class_name = self.class_values_to_name.get(class_value, "unknown")
@@ -303,6 +299,15 @@ class PanopticAnnotatorWidget(QWidget):
                 }
             rows.append(row)
 
-        annotations_df = pd.DataFrame(rows, columns=columns)
+        annotations_df = pd.DataFrame(rows)
 
         print(annotations_df)
+
+        # open the file explorer to save the file
+        file_path = self.viewer.window.qt_viewer.save_file_dialog(
+            caption="Save annotations",
+            filter="CSV files (*.csv);;All files (*.*)",
+        )
+        if file_path:
+            annotations_df.to_csv(file_path, index=False)
+            print(f"Annotations saved to {file_path}")
