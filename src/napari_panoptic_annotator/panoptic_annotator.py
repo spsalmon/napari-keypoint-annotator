@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import napari
 import numpy as np
 import pandas as pd
@@ -6,6 +8,7 @@ from napari_guitils.gui_structures import TabSet, VHGroup
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QButtonGroup,
+    QFileDialog,
     QLabel,
     QLineEdit,
     QPushButton,
@@ -112,6 +115,8 @@ class PanopticAnnotatorWidget(QWidget):
             "Annotator", self.semantic_annotation_group.gbox
         )
 
+        self.select_layer()
+
         # Setup radio buttons for class selection
         self.class_buttons = QButtonGroup(
             self
@@ -158,7 +163,6 @@ class PanopticAnnotatorWidget(QWidget):
         self.viewer.bind_key("up", self.cycle_class_up)
         self.viewer.bind_key("down", self.cycle_class_down)
 
-        self.select_layer()
         self.add_connections()
 
     def add_connections(self):
@@ -304,10 +308,12 @@ class PanopticAnnotatorWidget(QWidget):
         print(annotations_df)
 
         # open the file explorer to save the file
-        file_path = self.viewer.window.qt_viewer.save_file_dialog(
-            caption="Save annotations",
-            filter="CSV files (*.csv);;All files (*.*)",
+        dialog = QFileDialog()
+        save_file, _ = dialog.getSaveFileName(
+            self, "Save annotations", "", "CSV Files (*.csv)"
         )
-        if file_path:
-            annotations_df.to_csv(file_path, index=False)
-            print(f"Annotations saved to {file_path}")
+        save_file = Path(save_file)
+
+        if save_file:
+            annotations_df.to_csv(save_file, index=False)
+            print(f"Annotations saved to {save_file}")
