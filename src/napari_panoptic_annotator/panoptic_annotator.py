@@ -169,11 +169,11 @@ class PanopticAnnotatorWidget(QWidget):
                 print("Directory selection cancelled.")
                 return ""
 
-        self.project_group = VHGroup("Project", orientation="G")
         self.tabs.add_named_tab(
             "Annotator", self.semantic_annotation_group.gbox
         )
 
+        self.project_group = VHGroup("Project", orientation="G")
         self.reference_dir_edit, self.reference_dir_button = (
             create_dir_selector(
                 self, self.project_group.glayout, "Select reference directory"
@@ -197,6 +197,7 @@ class PanopticAnnotatorWidget(QWidget):
         self.load_files_btn = QPushButton("Load files")
         self.project_group.glayout.addWidget(self.load_files_btn, 2, 0, 1, 2)
 
+        self.tabs.add_named_tab("Annotator", self.project_group.gbox)
         self.reference_files = []
         self.segmentation_files = []
         self.annotation_files = []
