@@ -234,6 +234,15 @@ class PanopticAnnotatorWidget(QWidget):
             }
         )
 
+        self.next_file_btn = QPushButton("Next file")
+        self.previous_file_btn = QPushButton("Previous file")
+
+        self.project_group.glayout.addWidget(self.next_file_btn, 6, 0, 1, 1)
+        self.project_group.glayout.addWidget(
+            self.previous_file_btn, 6, 1, 1, 1
+        )
+
+        self.current_file_idx = 0
         self.class_values = CLASS_VALUES
         self.selected_class = INITIAL_SELECTED_CLASS
         self.class_colors = CLASS_COLORS
@@ -268,6 +277,9 @@ class PanopticAnnotatorWidget(QWidget):
         self.load_annotation_files_btn.clicked.connect(
             self.load_annotation_files
         )
+
+        self.next_file_btn.clicked.connect(self.next_file)
+        self.previous_file_btn.clicked.connect(self.previous_file)
 
     def select_layer(self, newtext=None):
         self.selected_layer = self.select_layer_widget.native.currentText()
@@ -483,6 +495,17 @@ class PanopticAnnotatorWidget(QWidget):
 
         print(f"Loaded {annotations_df.shape[0]} annotations")
 
+    def _load_file(self):
+        row = self.files_df.iloc[self.current_file_idx]
+        reference_file = row["Reference"]
+        segmentation_file = row["Segmentation"]
+        annotation_file = row["Annotation"]
+
+        self.viewer.open(reference_file)
+        self.viewer.open(segmentation_file, layer_type="labels", opacity=0.5)
+        if annotation_file != "":
+            self._load_annotations(annotation_file)
+
     def load_files(self):
         reference_dir = self.reference_dir_edit.text()
         segmentation_dir = self.segmentation_dir_edit.text()
@@ -509,6 +532,7 @@ class PanopticAnnotatorWidget(QWidget):
 
         self.reference_files = reference_files
         self.segmentation_files = segmentation_files
+        self.current_file_idx = 0
 
         print(self.reference_files)
         print(self.segmentation_files)
@@ -531,12 +555,7 @@ class PanopticAnnotatorWidget(QWidget):
 
         print(self.files_df)
 
-        # load the first files in the viewer
-        self.viewer.open(reference_files[0])
-        # always open the segmentation file as a labels layer with 50% opacity
-        self.viewer.open(
-            segmentation_files[0], layer_type="labels", opacity=0.5
-        )
+        self._load_file()
 
     def load_annotation_files(self):
         annotation_dir = self.annotation_dir_edit.text()
@@ -569,3 +588,19 @@ class PanopticAnnotatorWidget(QWidget):
         self.files_df["Annotation"] = self.files_df["Annotation"].fillna("")
 
         print(self.files_df)
+
+    def next_file(self):
+        if self.current_file_idx >= len(self.files_df):
+            print("No more files to load")
+            return
+
+        self.current_file_idx += 1
+        self._load_file()
+
+    def previous_file(self):
+        if self.current_file_idx <= 0:
+            print("No more files to load")
+            return
+
+        self.current_file_idx -= 1
+        self._load_file()
