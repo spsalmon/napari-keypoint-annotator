@@ -516,6 +516,8 @@ class PanopticAnnotatorWidget(QWidget):
             }
         )
 
+        print(self.files_df)
+
         # load the first files in the viewer
         self.viewer.open(reference_files[0])
         # always open the segmentation file as a labels layer with 50% opacity
