@@ -216,9 +216,9 @@ class PanopticAnnotatorWidget(QWidget):
             self.annotation_dir_button, 4, 1, 1, 1
         )
 
-        self.load_annotations_btn = QPushButton("Load annotations")
+        self.load_annotation_files_btn = QPushButton("Load annotations")
         self.project_group.glayout.addWidget(
-            self.load_annotations_btn, 5, 0, 1, 2
+            self.load_annotation_files_btn, 5, 0, 1, 2
         )
 
         self.tabs.add_named_tab("Annotator", self.project_group.gbox)
@@ -265,7 +265,9 @@ class PanopticAnnotatorWidget(QWidget):
         self.save_annotations_btn.clicked.connect(self.save_annotations)
         self.load_annotations_btn.clicked.connect(self.load_annotations)
         self.load_files_btn.clicked.connect(self.load_files)
-        self.load_annotations_btn.clicked.connect(self.load_annotation_files)
+        self.load_annotation_files_btn.clicked.connect(
+            self.load_annotation_files
+        )
 
     def select_layer(self, newtext=None):
         self.selected_layer = self.select_layer_widget.native.currentText()
@@ -506,12 +508,12 @@ class PanopticAnnotatorWidget(QWidget):
         self.reference_files = reference_files
         self.segmentation_files = segmentation_files
 
-        self.files_df = self.files_df.append(
+        self.files_df = pd.DataFrame(
             {
-                "Reference": reference_files,
-                "Segmentation": segmentation_files,
-            },
-            ignore_index=True,
+                "Reference": self.reference_files,
+                "Segmentation": self.segmentation_files,
+                "Annotation": self.annotation_files,
+            }
         )
 
         # load the first files in the viewer
