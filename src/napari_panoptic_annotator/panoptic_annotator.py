@@ -196,7 +196,6 @@ class PanopticAnnotatorWidget(QWidget):
 
         self.load_files_btn = QPushButton("Load files")
         self.project_group.glayout.addWidget(self.load_files_btn, 2, 0, 1, 2)
-        self.tabs.add_named_tab("Project", self.project_group.gbox)
 
         self.reference_files = []
         self.segmentation_files = []
