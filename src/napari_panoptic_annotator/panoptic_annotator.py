@@ -12,6 +12,7 @@ from qtpy.QtWidgets import (
     QFileDialog,
     QLabel,
     QLineEdit,
+    QListWidget,
     QPushButton,
     QRadioButton,
     QVBoxLayout,
@@ -216,9 +217,20 @@ class PanopticAnnotatorWidget(QWidget):
             self.annotation_dir_button, 4, 1, 1, 1
         )
 
+        self.file_list = QListWidget()
+        self.project_group.glayout.addWidget(self.file_list, 5, 0, 1, 2)
+
+        self.next_file_btn = QPushButton("Next file [J]")
+        self.previous_file_btn = QPushButton("Previous file [H]")
+
+        self.project_group.glayout.addWidget(
+            self.previous_file_btn, 6, 0, 1, 1
+        )
+        self.project_group.glayout.addWidget(self.next_file_btn, 6, 1, 1, 1)
+
         self.load_annotation_files_btn = QPushButton("Load annotations")
         self.project_group.glayout.addWidget(
-            self.load_annotation_files_btn, 5, 0, 1, 2
+            self.load_annotation_files_btn, 7, 0, 1, 2
         )
 
         self.tabs.add_named_tab("Annotator", self.project_group.gbox)
@@ -233,14 +245,7 @@ class PanopticAnnotatorWidget(QWidget):
                 "Annotation": self.annotation_files,
             }
         )
-
-        self.next_file_btn = QPushButton("Next file [J]")
-        self.previous_file_btn = QPushButton("Previous file [H]")
-
-        self.project_group.glayout.addWidget(
-            self.previous_file_btn, 6, 0, 1, 1
-        )
-        self.project_group.glayout.addWidget(self.next_file_btn, 6, 1, 1, 1)
+        self.project_group.glayout.addWidget(self.next_file_btn, 8, 1, 1, 1)
 
         self.save_annotations_project_btn = QPushButton("Save annotations")
         self.project_group.glayout.addWidget(
@@ -281,6 +286,7 @@ class PanopticAnnotatorWidget(QWidget):
         self.save_annotations_btn.clicked.connect(self.save_annotations)
         self.load_annotations_btn.clicked.connect(self.load_annotations)
         self.load_files_btn.clicked.connect(self.load_files)
+        self.file_list.itemClicked.connect(self.choose_file_from_list)
         self.load_annotation_files_btn.clicked.connect(
             self.load_annotation_files
         )
@@ -573,6 +579,12 @@ class PanopticAnnotatorWidget(QWidget):
 
         print(self.files_df)
 
+        # populate the list widget
+        self.file_list.clear()
+        for _, row in self.files_df.iterrows():
+            item = f"{os.path.basename(row['Reference'])}"
+            self.file_list.addItem(item)
+
         self._load_file()
 
     def load_annotation_files(self):
@@ -607,6 +619,11 @@ class PanopticAnnotatorWidget(QWidget):
 
         print(self.files_df)
 
+        if self.files_df.loc[self.current_file_idx, "Annotation"] != "":
+            self._load_annotations(
+                self.files_df.loc[self.current_file_idx, "Annotation"]
+            )
+
     def next_file(self):
         if self.current_file_idx >= len(self.files_df):
             print("No more files to load")
@@ -631,5 +648,9 @@ class PanopticAnnotatorWidget(QWidget):
             os.path.basename(self.reference_files[self.current_file_idx])
         )[0]
         output_path = os.path.join(output_dir, f"{name}.csv")
-        self.files_df.iloc[self.current_file_idx]["Annotation"] = output_path
+        self.files_df.loc[self.current_file_idx, "Annotation"] = output_path
         annotations_df.to_csv(output_path, index=False)
+
+    def choose_file_from_list(self):
+        self.current_file_idx = self.file_list.currentRow()
+        self._load_file()
