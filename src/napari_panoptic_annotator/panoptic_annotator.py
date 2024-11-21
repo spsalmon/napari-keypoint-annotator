@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import napari
@@ -149,6 +150,58 @@ class PanopticAnnotatorWidget(QWidget):
             self.load_annotations_btn, 2, 0, 1, 2
         )
 
+        def create_dir_selector(parent, layout, button_label):
+            dir_edit = QLineEdit()
+            dir_button = QPushButton(button_label)
+            dir_button.clicked.connect(
+                lambda: select_directory(parent, dir_edit)
+            )
+            return dir_edit, dir_button
+
+        def select_directory(parent, dir_edit):
+            dir_path = QFileDialog.getExistingDirectory(
+                parent, "Select Directory"
+            )
+            if dir_path:
+                dir_edit.setText(dir_path)
+                return dir_path
+            else:
+                print("Directory selection cancelled.")
+                return ""
+
+        self.project_group = VHGroup("Project", orientation="G")
+        self.tabs.add_named_tab(
+            "Annotator", self.semantic_annotation_group.gbox
+        )
+
+        self.reference_dir_edit, self.reference_dir_button = (
+            create_dir_selector(
+                self, self.project_group.glayout, "Select reference directory"
+            )
+        )
+        self.segmentation_dir_edit, self.segmentation_dir_button = (
+            create_dir_selector(
+                self,
+                self.project_group.glayout,
+                "Select segmentation directory",
+            )
+        )
+
+        self.project_group.glayout.addWidget(
+            self.reference_dir_edit, 1, 0, 1, 1
+        )
+        self.project_group.glayout.addWidget(
+            self.reference_dir_button, 1, 1, 1, 1
+        )
+
+        self.load_files_btn = QPushButton("Load files")
+        self.project_group.glayout.addWidget(self.load_files_btn, 2, 0, 1, 2)
+        self.tabs.add_named_tab("Project", self.project_group.gbox)
+
+        self.reference_files = []
+        self.segmentation_files = []
+        self.annotation_files = []
+
         self.class_values = CLASS_VALUES
         self.selected_class = INITIAL_SELECTED_CLASS
         self.class_colors = CLASS_COLORS
@@ -179,6 +232,7 @@ class PanopticAnnotatorWidget(QWidget):
         )
         self.save_annotations_btn.clicked.connect(self.save_annotations)
         self.load_annotations_btn.clicked.connect(self.load_annotations)
+        self.load_files_btn.clicked.connect(self.load_files)
 
     def select_layer(self, newtext=None):
         self.selected_layer = self.select_layer_widget.native.currentText()
@@ -334,62 +388,94 @@ class PanopticAnnotatorWidget(QWidget):
         load_file = Path(load_file)
 
         if load_file:
-            annotations_df = pd.read_csv(load_file)
-            print(f"Annotations loaded from {load_file}")
+            self._load_annotations(load_file)
 
-            print(annotations_df)
+    def _load_annotations(self, file_path):
+        annotations_df = pd.read_csv(file_path)
+        annotations_df = pd.read_csv(file_path)
+        print(f"Annotations loaded from {file_path}")
 
-            if self.selected_annotation_layer == "":
-                self.add_annotation_layer()
-            else:
-                # Delete the current annotations layer
-                self.viewer.layers.remove(self.selected_annotation_layer)
-                self.add_annotation_layer()
+        print(annotations_df)
 
-            annotation_layer = self.viewer.layers[
-                self.selected_annotation_layer
-            ]
-            label_data = self.viewer.layers[self.selected_layer].data
+        if self.selected_annotation_layer == "":
+            self.add_annotation_layer()
+        else:
+            # Delete the current annotations layer
+            self.viewer.layers.remove(self.selected_annotation_layer)
+            self.add_annotation_layer()
 
-            three_dimentional = len(self.axes_order.text()) == 3
-            if three_dimentional:
-                unique_planes = annotations_df[
-                    self.axes_order.text()[0]
-                ].unique()
-                for plane in unique_planes:
-                    plane_df = annotations_df[
-                        annotations_df[self.axes_order.text()[0]] == plane
-                    ]
-                    for _, row in plane_df.iterrows():
-                        label, class_value = row["Label"], row["ClassID"]
-                        color = self.class_values_to_color.get(class_value)
-                        if color is None:
-                            print(f"Invalid class value {class_value}")
-                            continue
-                        mask_of_label = label_data[plane] == label
-                        # find the centroid of the mask
-                        props = regionprops(mask_of_label.astype(int))[0]
-                        centroid = props.centroid
-                        point = [plane, centroid[0], centroid[1]]
-                        annotation_layer.add(np.array(point))
-                        annotation_layer.face_color[-1] = np.array(
-                            self.class_values_to_color[class_value]
-                        ).astype(float)
-            else:
-                for _, row in annotations_df.iterrows():
+        annotation_layer = self.viewer.layers[self.selected_annotation_layer]
+        label_data = self.viewer.layers[self.selected_layer].data
+
+        three_dimentional = len(self.axes_order.text()) == 3
+        if three_dimentional:
+            unique_planes = annotations_df[self.axes_order.text()[0]].unique()
+            for plane in unique_planes:
+                plane_df = annotations_df[
+                    annotations_df[self.axes_order.text()[0]] == plane
+                ]
+                for _, row in plane_df.iterrows():
                     label, class_value = row["Label"], row["ClassID"]
                     color = self.class_values_to_color.get(class_value)
                     if color is None:
                         print(f"Invalid class value {class_value}")
                         continue
-                    mask_of_label = label_data == label
+                    mask_of_label = label_data[plane] == label
                     # find the centroid of the mask
                     props = regionprops(mask_of_label.astype(int))[0]
                     centroid = props.centroid
-                    point = [centroid[0], centroid[1]]
+                    point = [plane, centroid[0], centroid[1]]
                     annotation_layer.add(np.array(point))
                     annotation_layer.face_color[-1] = np.array(
                         self.class_values_to_color[class_value]
                     ).astype(float)
+        else:
+            for _, row in annotations_df.iterrows():
+                label, class_value = row["Label"], row["ClassID"]
+                color = self.class_values_to_color.get(class_value)
+                if color is None:
+                    print(f"Invalid class value {class_value}")
+                    continue
+                mask_of_label = label_data == label
+                # find the centroid of the mask
+                props = regionprops(mask_of_label.astype(int))[0]
+                centroid = props.centroid
+                point = [centroid[0], centroid[1]]
+                annotation_layer.add(np.array(point))
+                annotation_layer.face_color[-1] = np.array(
+                    self.class_values_to_color[class_value]
+                ).astype(float)
 
-            print(f"Loaded {annotations_df.shape[0]} annotations")
+        print(f"Loaded {annotations_df.shape[0]} annotations")
+
+    def load_files(self):
+        reference_dir = self.reference_dir_edit.text()
+        segmentation_dir = self.segmentation_dir_edit.text()
+
+        if reference_dir == "" or segmentation_dir == "":
+            print("Please select both reference and segmentation directories")
+            return
+
+        reference_files = sorted(
+            [os.path.join(reference_dir, f) for f in os.listdir(reference_dir)]
+        )
+        segmentation_files = sorted(
+            [
+                os.path.join(segmentation_dir, f)
+                for f in os.listdir(segmentation_dir)
+            ]
+        )
+
+        if len(reference_files) != len(segmentation_files):
+            print("Number of reference and segmentation files do not match")
+            return
+
+        self.reference_files = reference_files
+        self.segmentation_files = segmentation_files
+
+        # load the first files in the viewer
+        self.viewer.open(reference_files[0])
+        # always open the segmentation file as a labels layer with 50% opacity
+        self.viewer.open(
+            segmentation_files[0], layer_type="labels", opacity=0.5
+        )
