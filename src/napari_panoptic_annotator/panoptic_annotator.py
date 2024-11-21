@@ -237,10 +237,10 @@ class PanopticAnnotatorWidget(QWidget):
         self.next_file_btn = QPushButton("Next file")
         self.previous_file_btn = QPushButton("Previous file")
 
-        self.project_group.glayout.addWidget(self.next_file_btn, 6, 0, 1, 1)
         self.project_group.glayout.addWidget(
-            self.previous_file_btn, 6, 1, 1, 1
+            self.previous_file_btn, 6, 0, 1, 1
         )
+        self.project_group.glayout.addWidget(self.next_file_btn, 6, 1, 1, 1)
 
         self.current_file_idx = 0
         self.class_values = CLASS_VALUES
@@ -259,9 +259,11 @@ class PanopticAnnotatorWidget(QWidget):
             self.class_values[cls]: cls for cls in self.class_colors
         }
 
-        # bind the key shortcuts (up and down arrows) to cycle through classes
         self.viewer.bind_key("up", self.cycle_class_up)
         self.viewer.bind_key("down", self.cycle_class_down)
+
+        self.viewer.bind_key("j", self.next_file)
+        self.viewer.bind_key("h", self.previous_file)
 
         self.add_connections()
 
@@ -496,6 +498,10 @@ class PanopticAnnotatorWidget(QWidget):
         print(f"Loaded {annotations_df.shape[0]} annotations")
 
     def _load_file(self):
+        # clear the current layers
+        self.viewer.layers.select_all()
+        self.viewer.layers.remove_selected()
+
         row = self.files_df.iloc[self.current_file_idx]
         reference_file = row["Reference"]
         segmentation_file = row["Segmentation"]
