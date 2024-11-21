@@ -16,6 +16,7 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from skimage.measure import regionprops
 
 # Define class colors and values, eventually will be defined by user
 INITIAL_SELECTED_CLASS = "intestine"  # Default class
@@ -131,6 +132,7 @@ class PanopticAnnotatorWidget(QWidget):
                 btn.setChecked(True)  # Set default selected class
 
         self.save_annotations_btn = QPushButton("Save annotations")
+        self.load_annotations_btn = QPushButton("Load annotations")
 
         self.semantic_annotation_group.glayout.addWidget(
             QLabel("Select class"), 0, 0, 1, 1
@@ -141,6 +143,10 @@ class PanopticAnnotatorWidget(QWidget):
 
         self.semantic_annotation_group.glayout.addWidget(
             self.save_annotations_btn, 1, 0, 1, 2
+        )
+
+        self.semantic_annotation_group.glayout.addWidget(
+            self.load_annotations_btn, 2, 0, 1, 2
         )
 
         self.class_values = CLASS_VALUES
@@ -172,6 +178,7 @@ class PanopticAnnotatorWidget(QWidget):
             self.add_annotation_layer
         )
         self.save_annotations_btn.clicked.connect(self.save_annotations)
+        self.load_annotations_btn.clicked.connect(self.load_annotations)
 
     def select_layer(self, newtext=None):
         self.selected_layer = self.select_layer_widget.native.currentText()
@@ -317,3 +324,66 @@ class PanopticAnnotatorWidget(QWidget):
         if save_file:
             annotations_df.to_csv(save_file, index=False)
             print(f"Annotations saved to {save_file}")
+
+    def load_annotations(self):
+        # open the file explorer to load the file
+        dialog = QFileDialog()
+        load_file, _ = dialog.getOpenFileName(
+            self, "Load annotations", "", "CSV Files (*.csv)"
+        )
+        load_file = Path(load_file)
+
+        if load_file:
+            annotations_df = pd.read_csv(load_file)
+            print(f"Annotations loaded from {load_file}")
+
+            print(annotations_df)
+
+            if self.selected_annotation_layer == "":
+                self.add_annotation_layer()
+            else:
+                # Delete the current annotations layer
+                self.viewer.layers.remove(self.selected_annotation_layer)
+                self.add_annotation_layer()
+
+            annotation_layer = self.viewer.layers[
+                self.selected_annotation_layer
+            ]
+            label_data = self.viewer.layers[self.selected_layer].data
+
+            three_dimentional = len(self.axes_order.text()) == 3
+            if three_dimentional:
+                unique_planes = annotations_df[
+                    self.axes_order.text()[0]
+                ].unique()
+                for plane in unique_planes:
+                    plane_df = annotations_df[
+                        annotations_df[self.axes_order.text()[0]] == plane
+                    ]
+                    for _, row in plane_df.iterrows():
+                        label, class_value = row["Label"], row["ClassID"]
+                        color = self.class_values_to_color.get(class_value)
+                        if color is None:
+                            print(f"Invalid class value {class_value}")
+                            continue
+                        mask_of_label = label_data[plane] == label
+                        # find the centroid of the mask
+                        props = regionprops(mask_of_label.astype(int))[0]
+                        centroid = props.centroid
+                        point = [plane, centroid[0], centroid[1]]
+                        annotation_layer.add(point, face_color=color)
+            else:
+                for _, row in annotations_df.iterrows():
+                    label, class_value = row["Label"], row["ClassID"]
+                    color = self.class_values_to_color.get(class_value)
+                    if color is None:
+                        print(f"Invalid class value {class_value}")
+                        continue
+                    mask_of_label = label_data == label
+                    # find the centroid of the mask
+                    props = regionprops(mask_of_label.astype(int))[0]
+                    centroid = props.centroid
+                    point = [centroid[0], centroid[1]]
+                    annotation_layer.add(point, face_color=color)
+
+            print(f"Loaded {annotations_df.shape[0]} annotations")
