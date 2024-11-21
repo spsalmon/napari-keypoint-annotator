@@ -245,11 +245,10 @@ class PanopticAnnotatorWidget(QWidget):
                 "Annotation": self.annotation_files,
             }
         )
-        self.project_group.glayout.addWidget(self.next_file_btn, 8, 1, 1, 1)
 
         self.save_annotations_project_btn = QPushButton("Save annotations")
         self.project_group.glayout.addWidget(
-            self.save_annotations_project_btn, 7, 0, 1, 2
+            self.save_annotations_project_btn, 8, 0, 1, 2
         )
 
         self.current_file_idx = 0
@@ -624,7 +623,7 @@ class PanopticAnnotatorWidget(QWidget):
                 self.files_df.loc[self.current_file_idx, "Annotation"]
             )
 
-    def next_file(self):
+    def next_file(self, event):
         if self.current_file_idx >= len(self.files_df):
             print("No more files to load")
             return
@@ -632,7 +631,7 @@ class PanopticAnnotatorWidget(QWidget):
         self.current_file_idx += 1
         self._load_file()
 
-    def previous_file(self):
+    def previous_file(self, event):
         if self.current_file_idx <= 0:
             print("No more files to load")
             return
