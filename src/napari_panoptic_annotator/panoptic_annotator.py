@@ -597,7 +597,7 @@ class PanopticAnnotatorWidget(QWidget):
 
         # add the annotation files to the dataframe by matching the names
         for annotation_file in annotation_files:
-            name = os.path.splittext(os.path.basename(annotation_file))[0]
+            name = os.path.splitext(os.path.basename(annotation_file))[0]
             for i, row in self.files_df.iterrows():
                 if name in row["Reference"]:
                     self.files_df.loc[i, "Annotation"] = annotation_file
@@ -627,7 +627,7 @@ class PanopticAnnotatorWidget(QWidget):
         annotations_df = self._convert_point_layer_to_df()
 
         output_dir = self.annotation_dir_edit.text()
-        name = os.path.splittext(
+        name = os.path.splitext(
             os.path.basename(self.reference_files[self.current_file_idx])
         )[0]
         output_path = os.path.join(output_dir, f"{name}.csv")
