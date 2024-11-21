@@ -510,13 +510,24 @@ class PanopticAnnotatorWidget(QWidget):
         self.reference_files = reference_files
         self.segmentation_files = segmentation_files
 
-        self.files_df = pd.DataFrame(
-            {
-                "Reference": self.reference_files,
-                "Segmentation": self.segmentation_files,
-                "Annotation": self.annotation_files,
+        print(self.reference_files)
+        print(self.segmentation_files)
+
+        rows = []
+
+        for (
+            reference_file,
+            segmentation_file,
+        ) in zip(reference_files, segmentation_files):
+
+            row = {
+                "Reference": reference_file,
+                "Segmentation": segmentation_file,
+                "Annotation": "",
             }
-        )
+            rows.append(row)
+
+        self.files_df = pd.DataFrame(rows)
 
         print(self.files_df)
 
