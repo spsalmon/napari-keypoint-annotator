@@ -217,21 +217,21 @@ class PanopticAnnotatorWidget(QWidget):
             self.annotation_dir_button, 4, 1, 1, 1
         )
 
+        self.load_annotation_files_btn = QPushButton("Load annotations")
+        self.project_group.glayout.addWidget(
+            self.load_annotation_files_btn, 5, 0, 1, 2
+        )
+
         self.file_list = QListWidget()
-        self.project_group.glayout.addWidget(self.file_list, 5, 0, 1, 2)
+        self.project_group.glayout.addWidget(self.file_list, 6, 0, 1, 2)
 
         self.next_file_btn = QPushButton("Next file [J]")
         self.previous_file_btn = QPushButton("Previous file [H]")
 
         self.project_group.glayout.addWidget(
-            self.previous_file_btn, 6, 0, 1, 1
+            self.previous_file_btn, 7, 0, 1, 1
         )
-        self.project_group.glayout.addWidget(self.next_file_btn, 6, 1, 1, 1)
-
-        self.load_annotation_files_btn = QPushButton("Load annotations")
-        self.project_group.glayout.addWidget(
-            self.load_annotation_files_btn, 7, 0, 1, 2
-        )
+        self.project_group.glayout.addWidget(self.next_file_btn, 7, 1, 1, 1)
 
         self.tabs.add_named_tab("Annotator", self.project_group.gbox)
         self.reference_files = []
