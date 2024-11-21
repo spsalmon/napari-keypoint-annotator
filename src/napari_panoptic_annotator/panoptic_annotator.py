@@ -234,13 +234,18 @@ class PanopticAnnotatorWidget(QWidget):
             }
         )
 
-        self.next_file_btn = QPushButton("Next file")
-        self.previous_file_btn = QPushButton("Previous file")
+        self.next_file_btn = QPushButton("Next file [J]")
+        self.previous_file_btn = QPushButton("Previous file [H]")
 
         self.project_group.glayout.addWidget(
             self.previous_file_btn, 6, 0, 1, 1
         )
         self.project_group.glayout.addWidget(self.next_file_btn, 6, 1, 1, 1)
+
+        self.save_annotations_project_btn = QPushButton("Save annotations")
+        self.project_group.glayout.addWidget(
+            self.save_annotations_project_btn, 7, 0, 1, 2
+        )
 
         self.current_file_idx = 0
         self.class_values = CLASS_VALUES
@@ -282,6 +287,10 @@ class PanopticAnnotatorWidget(QWidget):
 
         self.next_file_btn.clicked.connect(self.next_file)
         self.previous_file_btn.clicked.connect(self.previous_file)
+
+        self.save_annotations_project_btn.clicked.connect(
+            self.save_annotations_project
+        )
 
     def select_layer(self, newtext=None):
         self.selected_layer = self.select_layer_widget.native.currentText()
@@ -374,6 +383,22 @@ class PanopticAnnotatorWidget(QWidget):
                 btn.setChecked(True)
 
     def save_annotations(self):
+        annotations_df = self._convert_point_layer_to_df()
+
+        print(annotations_df)
+
+        # open the file explorer to save the file
+        dialog = QFileDialog()
+        save_file, _ = dialog.getSaveFileName(
+            self, "Save annotations", "", "CSV Files (*.csv)"
+        )
+        save_file = Path(save_file)
+
+        if save_file:
+            annotations_df.to_csv(save_file, index=False)
+            print(f"Annotations saved to {save_file}")
+
+    def _convert_point_layer_to_df(self):
         if self.selected_annotation_layer == "":
             print("No annotation layer selected")
             return
@@ -413,20 +438,7 @@ class PanopticAnnotatorWidget(QWidget):
                 }
             rows.append(row)
 
-        annotations_df = pd.DataFrame(rows)
-
-        print(annotations_df)
-
-        # open the file explorer to save the file
-        dialog = QFileDialog()
-        save_file, _ = dialog.getSaveFileName(
-            self, "Save annotations", "", "CSV Files (*.csv)"
-        )
-        save_file = Path(save_file)
-
-        if save_file:
-            annotations_df.to_csv(save_file, index=False)
-            print(f"Annotations saved to {save_file}")
+        return pd.DataFrame(rows)
 
     def load_annotations(self):
         # open the file explorer to load the file
@@ -610,3 +622,14 @@ class PanopticAnnotatorWidget(QWidget):
 
         self.current_file_idx -= 1
         self._load_file()
+
+    def save_annotations_project(self):
+        annotations_df = self._convert_point_layer_to_df()
+
+        output_dir = self.annotation_dir_edit.text()
+        name = os.path.splittext(
+            os.path.basename(self.reference_files[self.current_file_idx])
+        )[0]
+        output_path = os.path.join(output_dir, f"{name}.csv")
+        self.files_df.iloc[self.current_file_idx]["Annotation"] = output_path
+        annotations_df.to_csv(output_path, index=False)
