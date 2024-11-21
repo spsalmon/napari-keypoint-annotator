@@ -501,6 +501,8 @@ class PanopticAnnotatorWidget(QWidget):
             ]
         )
 
+        print(len(reference_files), len(segmentation_files))
+
         if len(reference_files) != len(segmentation_files):
             print("Number of reference and segmentation files do not match")
             return
