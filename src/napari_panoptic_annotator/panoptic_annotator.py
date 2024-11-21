@@ -373,7 +373,7 @@ class PanopticAnnotatorWidget(QWidget):
                         point = [plane, centroid[0], centroid[1]]
                         annotation_layer.add(np.array(point))
                         annotation_layer.face_color[-1] = np.array(
-                            self.class_values_to_color[row["Class"]]
+                            self.class_values_to_color[class_value]
                         ).astype(float)
             else:
                 for _, row in annotations_df.iterrows():
@@ -389,7 +389,7 @@ class PanopticAnnotatorWidget(QWidget):
                     point = [centroid[0], centroid[1]]
                     annotation_layer.add(np.array(point))
                     annotation_layer.face_color[-1] = np.array(
-                        self.class_values_to_color[row["Class"]]
+                        self.class_values_to_color[class_value]
                     ).astype(float)
 
             print(f"Loaded {annotations_df.shape[0]} annotations")
