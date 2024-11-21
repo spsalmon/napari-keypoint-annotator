@@ -194,13 +194,46 @@ class PanopticAnnotatorWidget(QWidget):
             self.reference_dir_button, 1, 1, 1, 1
         )
 
+        self.project_group.glayout.addWidget(
+            self.segmentation_dir_edit, 2, 0, 1, 1
+        )
+        self.project_group.glayout.addWidget(
+            self.segmentation_dir_button, 2, 1, 1, 1
+        )
+
         self.load_files_btn = QPushButton("Load files")
         self.project_group.glayout.addWidget(self.load_files_btn, 2, 0, 1, 2)
+
+        self.annotation_dir_edit, self.annotation_dir_button = (
+            create_dir_selector(
+                self, self.project_group.glayout, "Select annotation directory"
+            )
+        )
+
+        self.project_group.glayout.addWidget(
+            self.annotation_dir_edit, 3, 0, 1, 1
+        )
+        self.project_group.glayout.addWidget(
+            self.annotation_dir_button, 3, 1, 1, 1
+        )
+
+        self.load_annotations_btn = QPushButton("Load annotations")
+        self.project_group.glayout.addWidget(
+            self.load_annotations_btn, 4, 0, 1, 2
+        )
 
         self.tabs.add_named_tab("Annotator", self.project_group.gbox)
         self.reference_files = []
         self.segmentation_files = []
         self.annotation_files = []
+
+        self.files_df = pd.DataFrame(
+            {
+                "Reference": self.reference_files,
+                "Segmentation": self.segmentation_files,
+                "Annotation": self.annotation_files,
+            }
+        )
 
         self.class_values = CLASS_VALUES
         self.selected_class = INITIAL_SELECTED_CLASS
@@ -233,6 +266,7 @@ class PanopticAnnotatorWidget(QWidget):
         self.save_annotations_btn.clicked.connect(self.save_annotations)
         self.load_annotations_btn.clicked.connect(self.load_annotations)
         self.load_files_btn.clicked.connect(self.load_files)
+        self.load_annotations_btn.clicked.connect(self.load_annotation_files)
 
     def select_layer(self, newtext=None):
         self.selected_layer = self.select_layer_widget.native.currentText()
@@ -473,9 +507,49 @@ class PanopticAnnotatorWidget(QWidget):
         self.reference_files = reference_files
         self.segmentation_files = segmentation_files
 
+        self.files_df = self.files_df.append(
+            {
+                "Reference": reference_files,
+                "Segmentation": segmentation_files,
+            },
+            ignore_index=True,
+        )
+
         # load the first files in the viewer
         self.viewer.open(reference_files[0])
         # always open the segmentation file as a labels layer with 50% opacity
         self.viewer.open(
             segmentation_files[0], layer_type="labels", opacity=0.5
         )
+
+    def load_annotation_files(self):
+        annotation_dir = self.annotation_dir_edit.text()
+
+        if annotation_dir == "":
+            print("Please select an annotation directory")
+            return
+
+        if self.reference_files == [] or self.segmentation_files == []:
+            print("Please load reference and segmentation files first")
+            return
+
+        annotation_files = sorted(
+            [
+                os.path.join(annotation_dir, f)
+                for f in os.listdir(annotation_dir)
+            ]
+        )
+
+        self.annotation_files = annotation_files
+
+        # add the annotation files to the dataframe by matching the names
+        for annotation_file in annotation_files:
+            name = os.path.splittext(os.path.basename(annotation_file))[0]
+            for i, row in self.files_df.iterrows():
+                if name in row["Reference"]:
+                    self.files_df.loc[i, "Annotation"] = annotation_file
+                    break
+
+        self.files_df["Annotation"] = self.files_df["Annotation"].fillna("")
+
+        print(self.files_df)
