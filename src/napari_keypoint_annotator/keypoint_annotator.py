@@ -44,7 +44,7 @@ class KeypointAnnotatorWidget(QWidget):
         super().__init__(parent=parent)
 
         self.current_file_idx = 0
-        self.reference_layer = None
+        self.selected_reference_layer = ""
         self.selected_annotation_layer = ""
         self.keypoint_values = KEYPOINT_VALUES
         self.selected_keypoint = INITIAL_SELECTED_KEYPOINT
@@ -78,6 +78,25 @@ class KeypointAnnotatorWidget(QWidget):
         )
 
         self.tabs.add_named_tab("Annotator", self.layer_selection_group.gbox)
+
+        self.select_reference_layer_widget = create_widget(
+            annotation=napari.layers.Image, label="Pick reference"
+        )
+
+        self.select_reference_layer_widget.reset_choices()
+        self.viewer.layers.events.inserted.connect(
+            self.select_reference_layer_widget.reset_choices
+        )
+        self.viewer.layers.events.removed.connect(
+            self.select_reference_layer_widget.reset_choices
+        )
+
+        self.layer_selection_group.glayout.addWidget(
+            QLabel("Reference layer"), 0, 0, 1, 1
+        )
+        self.layer_selection_group.glayout.addWidget(
+            self.select_reference_layer_widget.native, 0, 1, 1, 1
+        )
 
         # annotation layer
         self.select_annotation_layer_widget = create_widget(
@@ -236,8 +255,8 @@ class KeypointAnnotatorWidget(QWidget):
             self.save_annotations_project_btn, 8, 0, 1, 2
         )
 
-        self.viewer.bind_key("up", self.cycle_class_up)
-        self.viewer.bind_key("down", self.cycle_class_down)
+        self.viewer.bind_key("up", self.cycle_keypoint_up)
+        self.viewer.bind_key("down", self.cycle_keypoint_down)
 
         self.viewer.bind_key("j", self.next_file)
         self.viewer.bind_key("h", self.previous_file)
@@ -265,26 +284,30 @@ class KeypointAnnotatorWidget(QWidget):
         )
 
     def select_layer(self, newtext=None):
+        self.selected_reference_layer = (
+            self.select_reference_layer_widget.native.currentText()
+        )
+        print(f"Selected reference layer: {self.selected_reference_layer}")
         self.selected_annotation_layer = (
             self.select_annotation_layer_widget.native.currentText()
         )
         print(f"Selected annotation layer: {self.selected_annotation_layer}")
 
-        if self.reference_layer is not None:
-            if self.reference_layer.ndim == 3:
+        if self.selected_reference_layer != "":
+            if self.viewer.layers[self.selected_reference_layer].ndim == 3:
                 self.axes_order.setText("ZYX")
             else:
                 self.axes_order.setText("YX")
 
     def add_annotation_layer(self):
-        if self.reference_layer is None:
+        if self.selected_reference_layer == "":
             print("No reference layer found")
             return
         if (
             self.selected_annotation_layer == ""
             or self.selected_annotation_layer not in self.viewer.layers
         ):
-            reference_layer = self.reference_layer
+            reference_layer = self.viewer.layers[self.selected_reference_layer]
             z_dim = (
                 reference_layer.data.shape[0]
                 if reference_layer.ndim == 3
@@ -325,7 +348,7 @@ class KeypointAnnotatorWidget(QWidget):
             f"Ready to add points with color {self.keypoint_colors[self.selected_keypoint]} for keypoint {self.selected_keypoint}."
         )
 
-    def cycle_class_down(self, event):
+    def cycle_keypoint_down(self, event):
         current_idx = KEYPOINTS.index(self.selected_keypoint)
         new_idx = current_idx + 1
         if new_idx >= len(KEYPOINTS):
@@ -335,11 +358,11 @@ class KeypointAnnotatorWidget(QWidget):
         self.update_point_tool_color()
 
         # Update the radio buttons
-        for btn in self.class_buttons.buttons():
+        for btn in self.keypoint_buttons.buttons():
             if btn.text() == self.selected_keypoint:
                 btn.setChecked(True)
 
-    def cycle_class_up(self, event):
+    def cycle_keypoint_up(self, event):
         current_idx = KEYPOINTS.index(self.selected_keypoint)
         new_idx = current_idx - 1
         if new_idx < 0:
@@ -349,7 +372,7 @@ class KeypointAnnotatorWidget(QWidget):
         self.update_point_tool_color()
 
         # Update the radio buttons
-        for btn in self.class_buttons.buttons():
+        for btn in self.keypoint_buttons.buttons():
             if btn.text() == self.selected_keypoint:
                 btn.setChecked(True)
 
