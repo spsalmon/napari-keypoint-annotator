@@ -474,9 +474,12 @@ class KeypointAnnotatorWidget(QWidget):
                     ]
                     annotation_layer.add(
                         point,
-                        face_color=self.keypoint_values_to_color[
-                            row["KeypointID"]
-                        ],
+                        # face_color=self.keypoint_values_to_color[
+                        #     row["KeypointID"]
+                        # ],
+                    )
+                    annotation_layer.face_color[-1] = (
+                        self.keypoint_values_to_color[row["KeypointID"]]
                     )
         else:
             for _, row in annotations_df.iterrows():
@@ -486,9 +489,12 @@ class KeypointAnnotatorWidget(QWidget):
                 ]
                 annotation_layer.add(
                     point,
-                    face_color=self.keypoint_values_to_color[
-                        row["KeypointID"]
-                    ],
+                    # face_color=self.keypoint_values_to_color[
+                    #     row["KeypointID"]
+                    # ],
+                )
+                annotation_layer.face_color[-1] = (
+                    self.keypoint_values_to_color[row["KeypointID"]]
                 )
 
         print(f"Loaded {annotations_df.shape[0]} annotations")
