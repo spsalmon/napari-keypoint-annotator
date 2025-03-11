@@ -1,0 +1,14 @@
+name: napari-keypoint-annotator
+display_name: napari-keypoint-annotator
+# use 'hidden' to remove plugin from napari hub search results
+visibility: public
+# see https://napari.org/stable/plugins/manifest.html for valid categories
+categories: ["Annotation"]
+contributions:
+  commands:
+    - id: napari-keypoint-annotator.make_qwidget
+      python_name: napari_keypoint_annotator.keypoint_annotator:KeypointAnnotatorWidget
+      title: Keypoint Annotator Widget
+  widgets:
+    - command: napari-keypoint-annotator.make_qwidget
+      display_name: Keypoint Annotator

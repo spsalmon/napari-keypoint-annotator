@@ -1,11 +1,11 @@
-# napari-panoptic-annotator
+# napari-keypoint-annotator
 
-[![License BSD-3](https://img.shields.io/pypi/l/napari-panoptic-annotator.svg?color=green)](https://github.com/spsalmon/napari-panoptic-annotator/raw/main/LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/napari-panoptic-annotator.svg?color=green)](https://pypi.org/project/napari-panoptic-annotator)
-[![Python Version](https://img.shields.io/pypi/pyversions/napari-panoptic-annotator.svg?color=green)](https://python.org)
-[![tests](https://github.com/spsalmon/napari-panoptic-annotator/workflows/tests/badge.svg)](https://github.com/spsalmon/napari-panoptic-annotator/actions)
-[![codecov](https://codecov.io/gh/spsalmon/napari-panoptic-annotator/branch/main/graph/badge.svg)](https://codecov.io/gh/spsalmon/napari-panoptic-annotator)
-[![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-panoptic-annotator)](https://napari-hub.org/plugins/napari-panoptic-annotator)
+[![License BSD-3](https://img.shields.io/pypi/l/napari-keypoint-annotator.svg?color=green)](https://github.com/spsalmon/napari-keypoint-annotator/raw/main/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/napari-keypoint-annotator.svg?color=green)](https://pypi.org/project/napari-keypoint-annotator)
+[![Python Version](https://img.shields.io/pypi/pyversions/napari-keypoint-annotator.svg?color=green)](https://python.org)
+[![tests](https://github.com/spsalmon/napari-keypoint-annotator/workflows/tests/badge.svg)](https://github.com/spsalmon/napari-keypoint-annotator/actions)
+[![codecov](https://codecov.io/gh/spsalmon/napari-keypoint-annotator/branch/main/graph/badge.svg)](https://codecov.io/gh/spsalmon/napari-keypoint-annotator)
+[![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-keypoint-annotator)](https://napari-hub.org/plugins/napari-keypoint-annotator)
 
 A plugin to add semantic information to binary or semantic segmentation
 
@@ -23,15 +23,15 @@ https://napari.org/stable/plugins/index.html
 
 ## Installation
 
-You can install `napari-panoptic-annotator` via [pip]:
+You can install `napari-keypoint-annotator` via [pip]:
 
-    pip install napari-panoptic-annotator
+    pip install napari-keypoint-annotator
 
 
 
 To install latest development version :
 
-    pip install git+https://github.com/spsalmon/napari-panoptic-annotator.git
+    pip install git+https://github.com/spsalmon/napari-keypoint-annotator.git
 
 
 ## Contributing
@@ -42,7 +42,7 @@ the coverage at least stays the same before you submit a pull request.
 ## License
 
 Distributed under the terms of the [BSD-3] license,
-"napari-panoptic-annotator" is free and open source software
+"napari-keypoint-annotator" is free and open source software
 
 ## Issues
 
@@ -59,7 +59,7 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [Mozilla Public License 2.0]: https://www.mozilla.org/media/MPL/2.0/index.txt
 [napari-plugin-template]: https://github.com/napari/napari-plugin-template
 
-[file an issue]: https://github.com/spsalmon/napari-panoptic-annotator/issues
+[file an issue]: https://github.com/spsalmon/napari-keypoint-annotator/issues
 
 [napari]: https://github.com/napari/napari
 [tox]: https://tox.readthedocs.io/en/latest/

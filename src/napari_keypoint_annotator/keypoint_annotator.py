@@ -18,23 +18,21 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from skimage.measure import regionprops
 
-# Define class colors and values, eventually will be defined by user
-INITIAL_SELECTED_CLASS = "intestine"  # Default class
-CLASSES = ["epidermis", "intestine", "other", "error"]
-CLASS_COLORS = {
-    "epidermis": (1, 0, 0, 1),  # Red
-    "intestine": (0, 0, 1, 1),  # Blue
-    "other": (1, 1, 0, 1),  # Yellow
-    "error": (1, 0.5, 0.5, 1),  # Coral Pink
+# Define keypoints colors and values, eventually will be defined by user
+INITIAL_SELECTED_KEYPOINT = "first_bulb"  # Default class
+KEYPOINTS = ["first_bulb", "ismuth", "terminal_bulb"]
+KEYPOINT_COLORS = {
+    "first_bulb": (1, 0, 0, 1),
+    "ismuth": (0, 1, 0, 1),
+    "terminal_bulb": (0, 0, 1, 1),
 }
-CLASS_VALUES = {"epidermis": 0, "intestine": 1, "other": 2, "error": 3}
+KEYPOINT_VALUES = {"first_bulb": 0, "ismuth": 1, "terminal_bulb": 2}
 
 
-class PanopticAnnotatorWidget(QWidget):
+class KeypointAnnotatorWidget(QWidget):
     """
-    Implementation of a napari widget for adding semantic information to instance segmentation.
+    Implementation of a napari widget for annotating keypoints in 2D.
 
     Parameters
     ----------
@@ -61,17 +59,6 @@ class PanopticAnnotatorWidget(QWidget):
 
         self.tabs.add_named_tab("Annotator", self.layer_selection_group.gbox)
 
-        # segmentation layer
-        self.select_layer_widget = create_widget(
-            annotation=napari.layers.Labels, label="Pick segmentation"
-        )
-        self.select_layer_widget.reset_choices()
-        self.viewer.layers.events.inserted.connect(
-            self.select_layer_widget.reset_choices
-        )
-        self.viewer.layers.events.removed.connect(
-            self.select_layer_widget.reset_choices
-        )
         # annotation layer
         self.select_annotation_layer_widget = create_widget(
             annotation=napari.layers.Points, label="Pick annotation"
@@ -84,12 +71,6 @@ class PanopticAnnotatorWidget(QWidget):
             self.select_annotation_layer_widget.reset_choices
         )
 
-        self.layer_selection_group.glayout.addWidget(
-            QLabel("Segmentation layer"), 0, 0, 1, 1
-        )
-        self.layer_selection_group.glayout.addWidget(
-            self.select_layer_widget.native, 0, 1, 1, 1
-        )
         self.layer_selection_group.glayout.addWidget(
             QLabel("Annotation layer"), 1, 0, 1, 1
         )
@@ -111,43 +92,43 @@ class PanopticAnnotatorWidget(QWidget):
             self.axes_order, 3, 1, 1, 1
         )
 
-        self.semantic_annotation_group = VHGroup(
-            "Semantic annotation", orientation="G"
+        self.keypoint_annotation_group = VHGroup(
+            "Keypoint annotation", orientation="G"
         )
         self.tabs.add_named_tab(
-            "Annotator", self.semantic_annotation_group.gbox
+            "Annotator", self.keypoint_annotation_group.gbox
         )
 
         self.select_layer()
 
-        # Setup radio buttons for class selection
-        self.class_buttons = QButtonGroup(
+        # Setup radio buttons for keypoint selection
+        self.keypoint_buttons = QButtonGroup(
             self
         )  # Using a button group to manage radio buttons
-        class_layout = QVBoxLayout()
-        for cls in CLASSES:
+        keypoint_layout = QVBoxLayout()
+        for cls in KEYPOINTS:
             btn = QRadioButton(cls)
-            btn.toggled.connect(self.on_class_selected)
+            btn.toggled.connect(self.on_keypoint_selected)
             self.class_buttons.addButton(btn)
-            class_layout.addWidget(btn)
-            if cls == INITIAL_SELECTED_CLASS:
-                btn.setChecked(True)  # Set default selected class
+            keypoint_layout.addWidget(btn)
+            if cls == INITIAL_SELECTED_KEYPOINT:
+                btn.setChecked(True)  # Set default selected keypoint
 
         self.save_annotations_btn = QPushButton("Save annotations")
         self.load_annotations_btn = QPushButton("Load annotations")
 
-        self.semantic_annotation_group.glayout.addWidget(
-            QLabel("Select class"), 0, 0, 1, 1
+        self.keypoint_annotation_group.glayout.addWidget(
+            QLabel("Select keypoint"), 0, 0, 1, 1
         )
-        self.semantic_annotation_group.glayout.addLayout(
-            class_layout, 0, 1, 1, 1
+        self.keypoint_annotation_group.glayout.addLayout(
+            keypoint_layout, 0, 1, 1, 1
         )
 
-        self.semantic_annotation_group.glayout.addWidget(
+        self.keypoint_annotation_group.glayout.addWidget(
             self.save_annotations_btn, 1, 0, 1, 2
         )
 
-        self.semantic_annotation_group.glayout.addWidget(
+        self.keypoint_annotation_group.glayout.addWidget(
             self.load_annotations_btn, 2, 0, 1, 2
         )
 
@@ -171,7 +152,7 @@ class PanopticAnnotatorWidget(QWidget):
                 return ""
 
         self.tabs.add_named_tab(
-            "Annotator", self.semantic_annotation_group.gbox
+            "Annotator", self.keypoint_annotation_group.gbox
         )
 
         self.project_group = VHGroup("Project", orientation="G")
@@ -180,26 +161,12 @@ class PanopticAnnotatorWidget(QWidget):
                 self, self.project_group.glayout, "Select reference directory"
             )
         )
-        self.segmentation_dir_edit, self.segmentation_dir_button = (
-            create_dir_selector(
-                self,
-                self.project_group.glayout,
-                "Select segmentation directory",
-            )
-        )
 
         self.project_group.glayout.addWidget(
             self.reference_dir_edit, 1, 0, 1, 1
         )
         self.project_group.glayout.addWidget(
             self.reference_dir_button, 1, 1, 1, 1
-        )
-
-        self.project_group.glayout.addWidget(
-            self.segmentation_dir_edit, 2, 0, 1, 1
-        )
-        self.project_group.glayout.addWidget(
-            self.segmentation_dir_button, 2, 1, 1, 1
         )
 
         self.load_files_btn = QPushButton("Load files")
@@ -235,13 +202,11 @@ class PanopticAnnotatorWidget(QWidget):
 
         self.tabs.add_named_tab("Annotator", self.project_group.gbox)
         self.reference_files = []
-        self.segmentation_files = []
         self.annotation_files = []
 
         self.files_df = pd.DataFrame(
             {
                 "Reference": self.reference_files,
-                "Segmentation": self.segmentation_files,
                 "Annotation": self.annotation_files,
             }
         )
@@ -252,20 +217,22 @@ class PanopticAnnotatorWidget(QWidget):
         )
 
         self.current_file_idx = 0
-        self.class_values = CLASS_VALUES
-        self.selected_class = INITIAL_SELECTED_CLASS
-        self.class_colors = CLASS_COLORS
+        self.reference_layer = None
+        self.selected_annotation_layer = ""
+        self.keypoint_values = KEYPOINT_VALUES
+        self.selected_keypoint = INITIAL_SELECTED_KEYPOINT
+        self.keypoint_colors = KEYPOINT_COLORS
         # Map colors to class values using tuples as keys
-        self.color_to_class = {
-            self.class_colors[cls]: self.class_values[cls]
-            for cls in self.class_colors
+        self.color_to_keypoint = {
+            self.keypoint_colors[cls]: self.keypoint_values[cls]
+            for cls in self.keypoint_colors
         }
-        self.class_values_to_color = {
-            self.class_values[cls]: self.class_colors[cls]
-            for cls in self.class_colors
+        self.keypoint_values_to_color = {
+            self.keypoint_values[cls]: self.keypoint_colors[cls]
+            for cls in self.keypoint_colors
         }
-        self.class_values_to_name = {
-            self.class_values[cls]: cls for cls in self.class_colors
+        self.keypoint_values_to_name = {
+            self.keypoint_values[cls]: cls for cls in self.keypoint_colors
         }
 
         self.viewer.bind_key("up", self.cycle_class_up)
@@ -277,7 +244,6 @@ class PanopticAnnotatorWidget(QWidget):
         self.add_connections()
 
     def add_connections(self):
-        self.select_layer_widget.changed.connect(self.select_layer)
         self.select_annotation_layer_widget.changed.connect(self.select_layer)
         self.add_annotation_layer_btn.clicked.connect(
             self.add_annotation_layer
@@ -298,40 +264,39 @@ class PanopticAnnotatorWidget(QWidget):
         )
 
     def select_layer(self, newtext=None):
-        self.selected_layer = self.select_layer_widget.native.currentText()
         self.selected_annotation_layer = (
             self.select_annotation_layer_widget.native.currentText()
         )
-
-        print(f"Selected layer: {self.selected_layer}")
         print(f"Selected annotation layer: {self.selected_annotation_layer}")
 
-        if self.selected_layer != "":
-            segmentation_layer = self.viewer.layers[self.selected_layer]
-            if segmentation_layer.ndim == 3:
+        if self.reference_layer is not None:
+            if self.reference_layer.ndim == 3:
                 self.axes_order.setText("ZYX")
             else:
                 self.axes_order.setText("YX")
 
     def add_annotation_layer(self):
-        if self.selected_layer == "":
-            print("No segmentation layer selected")
+        if self.reference_layer is None:
+            print("No reference layer found")
             return
         if (
             self.selected_annotation_layer == ""
             or self.selected_annotation_layer not in self.viewer.layers
         ):
-            segmentation_layer = self.viewer.layers[self.selected_layer]
+            reference_layer = self.reference_layer
             z_dim = (
-                segmentation_layer.data.shape[0]
-                if segmentation_layer.ndim == 3
+                reference_layer.data.shape[0]
+                if reference_layer.ndim == 3
                 else None
             )
             initial_data = (
                 np.zeros((0, 3)) if z_dim else np.zeros((0, 2))
             )  # Use ternary operator to set initial_data size
             self.annotation_layer = self.viewer.add_points(
-                initial_data, name="Annotations", ndim=3 if z_dim else 2
+                initial_data,
+                name="Annotations",
+                ndim=3 if z_dim else 2,
+                size=2,
             )
             print(
                 f"Annotation layer added with {'3D' if z_dim else '2D'} capabilities."
@@ -343,7 +308,7 @@ class PanopticAnnotatorWidget(QWidget):
     def on_class_selected(self, checked):
         radio_button = self.sender()
         if checked:
-            self.selected_class = radio_button.text()
+            self.selected_keypoint = radio_button.text()
             self.update_point_tool_color()
 
     def update_point_tool_color(self):
@@ -354,37 +319,37 @@ class PanopticAnnotatorWidget(QWidget):
         # Set the current face color to the selected class color
         self.viewer.layers[
             self.selected_annotation_layer
-        ].current_face_color = self.class_colors[self.selected_class]
+        ].current_face_color = self.keypoint_colors[self.selected_keypoint]
         print(
-            f"Ready to add points with color {self.class_colors[self.selected_class]} for class {self.selected_class}."
+            f"Ready to add points with color {self.keypoint_colors[self.selected_keypoint]} for class {self.selected_keypoint}."
         )
 
     def cycle_class_down(self, event):
-        current_idx = CLASSES.index(self.selected_class)
+        current_idx = KEYPOINTS.index(self.selected_keypoint)
         new_idx = current_idx + 1
-        if new_idx >= len(CLASSES):
+        if new_idx >= len(KEYPOINTS):
             new_idx = 0
 
-        self.selected_class = CLASSES[new_idx]
+        self.selected_keypoint = KEYPOINTS[new_idx]
         self.update_point_tool_color()
 
         # Update the radio buttons
         for btn in self.class_buttons.buttons():
-            if btn.text() == self.selected_class:
+            if btn.text() == self.selected_keypoint:
                 btn.setChecked(True)
 
     def cycle_class_up(self, event):
-        current_idx = CLASSES.index(self.selected_class)
+        current_idx = KEYPOINTS.index(self.selected_keypoint)
         new_idx = current_idx - 1
         if new_idx < 0:
-            new_idx = len(CLASSES) - 1
+            new_idx = len(KEYPOINTS) - 1
 
-        self.selected_class = CLASSES[new_idx]
+        self.selected_keypoint = KEYPOINTS[new_idx]
         self.update_point_tool_color()
 
         # Update the radio buttons
         for btn in self.class_buttons.buttons():
-            if btn.text() == self.selected_class:
+            if btn.text() == self.selected_keypoint:
                 btn.setChecked(True)
 
     def save_annotations(self):
@@ -408,10 +373,8 @@ class PanopticAnnotatorWidget(QWidget):
             print("No annotation layer selected")
             return
 
-        segmentation_layer = self.viewer.layers[self.selected_layer]
         annotation_layer = self.viewer.layers[self.selected_annotation_layer]
         annotation_data = annotation_layer.data
-        label_data = segmentation_layer.data
         print(f"Saving {annotation_data.shape[0]} annotations")
         # Save the annotations to a file
 
@@ -421,25 +384,25 @@ class PanopticAnnotatorWidget(QWidget):
         rows = []
         for point, color in zip(annotation_data, annotation_layer.face_color):
             point = tuple(round(p) for p in point)
-            label_value = label_data[tuple(point)]
-            class_value = self.color_to_class.get(tuple(color), -1)
-            class_name = self.class_values_to_name.get(class_value, "unknown")
-            print(
-                f"Point {point} is in class {class_name} with value {class_value}"
+            keypoint_value = self.color_to_keypoint.get(tuple(color), -1)
+            keypoint_name = self.keypoint_values_to_name.get(
+                keypoint_value, "unknown"
             )
 
             if three_dimentional:
                 row = {
+                    "Name": keypoint_name,
+                    "KeypointID": keypoint_value,
                     self.axes_order.text()[0]: point[0],
-                    "Label": label_value,
-                    "ClassID": class_value,
-                    "Class": class_name,
+                    self.axes_order.text()[1]: point[1],
+                    self.axes_order.text()[2]: point[2],
                 }
             else:
                 row = {
-                    "Label": label_value,
-                    "ClassID": class_value,
-                    "Class": class_name,
+                    "Name": keypoint_name,
+                    "KeypointID": keypoint_value,
+                    self.axes_order.text()[0]: point[0],
+                    self.axes_order.text()[1]: point[1],
                 }
             rows.append(row)
 
@@ -458,7 +421,6 @@ class PanopticAnnotatorWidget(QWidget):
 
     def _load_annotations(self, file_path):
         annotations_df = pd.read_csv(file_path)
-        annotations_df = pd.read_csv(file_path)
         print(f"Annotations loaded from {file_path}")
 
         print(annotations_df)
@@ -471,7 +433,6 @@ class PanopticAnnotatorWidget(QWidget):
             self.add_annotation_layer()
 
         annotation_layer = self.viewer.layers[self.selected_annotation_layer]
-        label_data = self.viewer.layers[self.selected_layer].data
 
         three_dimentional = len(self.axes_order.text()) == 3
         if three_dimentional:
@@ -481,36 +442,29 @@ class PanopticAnnotatorWidget(QWidget):
                     annotations_df[self.axes_order.text()[0]] == plane
                 ]
                 for _, row in plane_df.iterrows():
-                    label, class_value = row["Label"], row["ClassID"]
-                    color = self.class_values_to_color.get(class_value)
-                    if color is None:
-                        print(f"Invalid class value {class_value}")
-                        continue
-                    mask_of_label = label_data[plane] == label
-                    # find the centroid of the mask
-                    props = regionprops(mask_of_label.astype(int))[0]
-                    centroid = props.centroid
-                    point = [plane, centroid[0], centroid[1]]
-                    annotation_layer.add(np.array(point))
-                    annotation_layer.face_color[-1] = np.array(
-                        self.class_values_to_color[class_value]
-                    ).astype(float)
+                    point = [
+                        row[self.axes_order.text()[0]],
+                        row[self.axes_order.text()[1]],
+                        row[self.axes_order.text()[2]],
+                    ]
+                    annotation_layer.add(
+                        point,
+                        face_color=self.keypoint_values_to_color[
+                            row["KeypointID"]
+                        ],
+                    )
         else:
             for _, row in annotations_df.iterrows():
-                label, class_value = row["Label"], row["ClassID"]
-                color = self.class_values_to_color.get(class_value)
-                if color is None:
-                    print(f"Invalid class value {class_value}")
-                    continue
-                mask_of_label = label_data == label
-                # find the centroid of the mask
-                props = regionprops(mask_of_label.astype(int))[0]
-                centroid = props.centroid
-                point = [centroid[0], centroid[1]]
-                annotation_layer.add(np.array(point))
-                annotation_layer.face_color[-1] = np.array(
-                    self.class_values_to_color[class_value]
-                ).astype(float)
+                point = [
+                    row[self.axes_order.text()[0]],
+                    row[self.axes_order.text()[1]],
+                ]
+                annotation_layer.add(
+                    point,
+                    face_color=self.keypoint_values_to_color[
+                        row["KeypointID"]
+                    ],
+                )
 
         print(f"Loaded {annotations_df.shape[0]} annotations")
 
@@ -521,55 +475,34 @@ class PanopticAnnotatorWidget(QWidget):
 
         row = self.files_df.iloc[self.current_file_idx]
         reference_file = row["Reference"]
-        segmentation_file = row["Segmentation"]
         annotation_file = row["Annotation"]
 
         self.viewer.open(reference_file)
-        self.viewer.open(segmentation_file, layer_type="labels", opacity=0.5)
         if annotation_file != "":
             self._load_annotations(annotation_file)
 
     def load_files(self):
         reference_dir = self.reference_dir_edit.text()
-        segmentation_dir = self.segmentation_dir_edit.text()
 
-        if reference_dir == "" or segmentation_dir == "":
-            print("Please select both reference and segmentation directories")
+        if reference_dir == "":
+            print("Please select a reference directory")
             return
 
         reference_files = sorted(
             [os.path.join(reference_dir, f) for f in os.listdir(reference_dir)]
         )
-        segmentation_files = sorted(
-            [
-                os.path.join(segmentation_dir, f)
-                for f in os.listdir(segmentation_dir)
-            ]
-        )
-
-        print(len(reference_files), len(segmentation_files))
-
-        if len(reference_files) != len(segmentation_files):
-            print("Number of reference and segmentation files do not match")
-            return
 
         self.reference_files = reference_files
-        self.segmentation_files = segmentation_files
         self.current_file_idx = 0
 
         print(self.reference_files)
-        print(self.segmentation_files)
 
         rows = []
 
-        for (
-            reference_file,
-            segmentation_file,
-        ) in zip(reference_files, segmentation_files):
+        for (reference_file,) in self.reference_files:
 
             row = {
                 "Reference": reference_file,
-                "Segmentation": segmentation_file,
                 "Annotation": "",
             }
             rows.append(row)

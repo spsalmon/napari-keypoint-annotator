@@ -1,7 +1,7 @@
 [project]
-name = "napari-panoptic-annotator"
+name = "napari-keypoint-annotator"
 dynamic = ["version"]
-description = "A plugin to add semantic information to binary or semantic segmentation"
+description = "A plugin to add keypoints to straightened images"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
@@ -42,13 +42,13 @@ testing = [
 ]
 
 [project.entry-points."napari.manifest"]
-napari-panoptic-annotator = "napari_panoptic_annotator:napari.yaml"
+napari-keypoint-annotator = "napari_keypoint_annotator:napari.yaml"
 
 [project.urls]
-"Bug Tracker" = "https://github.com/spsalmon/napari-panoptic-annotator/issues"
-"Documentation" = "https://github.com/spsalmon/napari-panoptic-annotator#README.md"
-"Source Code" = "https://github.com/spsalmon/napari-panoptic-annotator"
-"User Support" = "https://github.com/spsalmon/napari-panoptic-annotator/issues"
+"Bug Tracker" = "https://github.com/spsalmon/napari-keypoint-annotator/issues"
+"Documentation" = "https://github.com/spsalmon/napari-keypoint-annotator#README.md"
+"Source Code" = "https://github.com/spsalmon/napari-keypoint-annotator"
+"User Support" = "https://github.com/spsalmon/napari-keypoint-annotator/issues"
 
 [build-system]
 requires = ["setuptools>=42.0.0", "wheel", "setuptools_scm"]
@@ -65,7 +65,7 @@ where = ["src"]
 
 
 [tool.setuptools_scm]
-write_to = "src/napari_panoptic_annotator/_version.py"
+write_to = "src/napari_keypoint_annotator/_version.py"
 
 
 [tool.black]
