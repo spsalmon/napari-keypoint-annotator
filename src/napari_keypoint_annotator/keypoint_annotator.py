@@ -126,12 +126,12 @@ class KeypointAnnotatorWidget(QWidget):
             self
         )  # Using a button group to manage radio buttons
         keypoint_layout = QVBoxLayout()
-        for cls in KEYPOINTS:
-            btn = QRadioButton(cls)
+        for kp in KEYPOINTS:
+            btn = QRadioButton(kp)
             btn.toggled.connect(self.on_keypoint_selected)
-            self.class_buttons.addButton(btn)
+            self.keypoint_buttons.addButton(btn)
             keypoint_layout.addWidget(btn)
-            if cls == INITIAL_SELECTED_KEYPOINT:
+            if kp == INITIAL_SELECTED_KEYPOINT:
                 btn.setChecked(True)  # Set default selected keypoint
 
         self.save_annotations_btn = QPushButton("Save annotations")
