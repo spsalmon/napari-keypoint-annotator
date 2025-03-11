@@ -306,7 +306,7 @@ class KeypointAnnotatorWidget(QWidget):
 
             self.update_point_tool_color()
 
-    def on_class_selected(self, checked):
+    def on_keypoint_selected(self, checked):
         radio_button = self.sender()
         if checked:
             self.selected_keypoint = radio_button.text()
@@ -317,12 +317,12 @@ class KeypointAnnotatorWidget(QWidget):
             return
         # Deselect all points
         self.viewer.layers[self.selected_annotation_layer].selected_data = []
-        # Set the current face color to the selected class color
+        # Set the current face color to the selected keypoinr color
         self.viewer.layers[
             self.selected_annotation_layer
         ].current_face_color = self.keypoint_colors[self.selected_keypoint]
         print(
-            f"Ready to add points with color {self.keypoint_colors[self.selected_keypoint]} for class {self.selected_keypoint}."
+            f"Ready to add points with color {self.keypoint_colors[self.selected_keypoint]} for keypoint {self.selected_keypoint}."
         )
 
     def cycle_class_down(self, event):
