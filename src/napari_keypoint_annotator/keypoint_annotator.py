@@ -551,8 +551,8 @@ class KeypointAnnotatorWidget(QWidget):
             print("Please select an annotation directory")
             return
 
-        if self.reference_files == [] or self.segmentation_files == []:
-            print("Please load reference and segmentation files first")
+        if self.reference_files == []:
+            print("Please load reference files first")
             return
 
         annotation_files = sorted(
