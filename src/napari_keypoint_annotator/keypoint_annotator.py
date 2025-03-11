@@ -500,7 +500,7 @@ class KeypointAnnotatorWidget(QWidget):
 
         rows = []
 
-        for (reference_file,) in self.reference_files:
+        for reference_file in self.reference_files:
 
             row = {
                 "Reference": reference_file,
