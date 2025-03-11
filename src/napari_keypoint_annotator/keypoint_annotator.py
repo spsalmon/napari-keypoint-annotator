@@ -264,6 +264,7 @@ class KeypointAnnotatorWidget(QWidget):
         self.add_connections()
 
     def add_connections(self):
+        self.select_reference_layer_widget.changed.connect(self.select_layer)
         self.select_annotation_layer_widget.changed.connect(self.select_layer)
         self.add_annotation_layer_btn.clicked.connect(
             self.add_annotation_layer
