@@ -42,6 +42,26 @@ class KeypointAnnotatorWidget(QWidget):
 
     def __init__(self, napari_viewer, parent=None):
         super().__init__(parent=parent)
+
+        self.current_file_idx = 0
+        self.reference_layer = None
+        self.selected_annotation_layer = ""
+        self.keypoint_values = KEYPOINT_VALUES
+        self.selected_keypoint = INITIAL_SELECTED_KEYPOINT
+        self.keypoint_colors = KEYPOINT_COLORS
+        # Map colors to class values using tuples as keys
+        self.color_to_keypoint = {
+            self.keypoint_colors[cls]: self.keypoint_values[cls]
+            for cls in self.keypoint_colors
+        }
+        self.keypoint_values_to_color = {
+            self.keypoint_values[cls]: self.keypoint_colors[cls]
+            for cls in self.keypoint_colors
+        }
+        self.keypoint_values_to_name = {
+            self.keypoint_values[cls]: cls for cls in self.keypoint_colors
+        }
+
         self.viewer = napari_viewer
 
         self.main_layout = QVBoxLayout()
@@ -215,25 +235,6 @@ class KeypointAnnotatorWidget(QWidget):
         self.project_group.glayout.addWidget(
             self.save_annotations_project_btn, 8, 0, 1, 2
         )
-
-        self.current_file_idx = 0
-        self.reference_layer = None
-        self.selected_annotation_layer = ""
-        self.keypoint_values = KEYPOINT_VALUES
-        self.selected_keypoint = INITIAL_SELECTED_KEYPOINT
-        self.keypoint_colors = KEYPOINT_COLORS
-        # Map colors to class values using tuples as keys
-        self.color_to_keypoint = {
-            self.keypoint_colors[cls]: self.keypoint_values[cls]
-            for cls in self.keypoint_colors
-        }
-        self.keypoint_values_to_color = {
-            self.keypoint_values[cls]: self.keypoint_colors[cls]
-            for cls in self.keypoint_colors
-        }
-        self.keypoint_values_to_name = {
-            self.keypoint_values[cls]: cls for cls in self.keypoint_colors
-        }
 
         self.viewer.bind_key("up", self.cycle_class_up)
         self.viewer.bind_key("down", self.cycle_class_down)
