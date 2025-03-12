@@ -335,6 +335,10 @@ class KeypointAnnotatorWidget(QWidget):
 
             self.update_point_tool_color()
 
+            self.viewer.layers[
+                self.selected_annotation_layer
+            ].mouse_drag_callbacks.append(self.cycle_down_on_click)
+
     def on_keypoint_selected(self, checked):
         radio_button = self.sender()
         if checked:
@@ -381,6 +385,12 @@ class KeypointAnnotatorWidget(QWidget):
         for btn in self.keypoint_buttons.buttons():
             if btn.text() == self.selected_keypoint:
                 btn.setChecked(True)
+
+    def cycle_down_on_click(self, event):
+        if self.selected_annotation_layer != "":
+            layer = self.viewer.layers[self.selected_annotation_layer]
+            if layer.mode == Mode.ADD:
+                self.cycle_keypoint_down(event)
 
     def save_annotations(self):
         annotations_df = self._convert_point_layer_to_df()
@@ -601,14 +611,14 @@ class KeypointAnnotatorWidget(QWidget):
             )
 
     def next_file(self, event):
-
+        annotations_df = self._convert_point_layer_to_df()
         output_dir = self.annotation_dir_edit.text()
         name = os.path.splitext(
             os.path.basename(self.reference_files[self.current_file_idx])
         )[0]
         output_path = os.path.join(output_dir, f"{name}.csv")
 
-        if not os.path.exists(output_path):
+        if not os.path.exists(output_path) and len(annotations_df) > 0:
             self.save_annotations_project()
 
         if self.current_file_idx >= len(self.files_df):
