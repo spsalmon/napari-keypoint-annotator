@@ -479,9 +479,6 @@ class KeypointAnnotatorWidget(QWidget):
                     ]
                     annotation_layer.add(
                         point,
-                        # face_color=self.keypoint_values_to_color[
-                        #     row["KeypointID"]
-                        # ],
                     )
                     annotation_layer.face_color[-1] = (
                         self.keypoint_values_to_color[row["KeypointID"]]
@@ -497,16 +494,19 @@ class KeypointAnnotatorWidget(QWidget):
                 ]
                 annotation_layer.add(
                     point,
-                    # face_color=self.keypoint_values_to_color[
-                    #     row["KeypointID"]
-                    # ],
-                )
-                annotation_layer.face_color[-1] = (
-                    self.keypoint_values_to_color[row["KeypointID"]]
                 )
 
                 # unselect the point
                 annotation_layer.selected_data = []
+
+                annotation_layer.face_color[-1] = (
+                    self.keypoint_values_to_color[row["KeypointID"]]
+                )
+
+        # to prevent the last point's color from being overwritten, create a temporary point
+        annotation_layer.add([0, 0])
+        # remove the temporary point
+        annotation_layer.remove_selected()
 
         print(f"Loaded {annotations_df.shape[0]} annotations")
 
@@ -601,12 +601,6 @@ class KeypointAnnotatorWidget(QWidget):
             )
 
     def next_file(self, event):
-        if self.current_file_idx >= len(self.files_df):
-            print("No more files to load")
-            return
-
-        self.current_file_idx += 1
-        self._load_file()
 
         output_dir = self.annotation_dir_edit.text()
         name = os.path.splitext(
@@ -616,6 +610,13 @@ class KeypointAnnotatorWidget(QWidget):
 
         if not os.path.exists(output_path):
             self.save_annotations_project()
+
+        if self.current_file_idx >= len(self.files_df):
+            print("No more files to load")
+            return
+
+        self.current_file_idx += 1
+        self._load_file()
 
     def previous_file(self, event):
         if self.current_file_idx <= 0:
