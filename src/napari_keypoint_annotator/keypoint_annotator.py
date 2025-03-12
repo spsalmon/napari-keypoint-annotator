@@ -259,8 +259,8 @@ class KeypointAnnotatorWidget(QWidget):
         self.viewer.bind_key("up", self.cycle_keypoint_up)
         self.viewer.bind_key("down", self.cycle_keypoint_down)
 
-        self.viewer.bind_key("j", self.next_file)
-        self.viewer.bind_key("h", self.previous_file)
+        self.viewer.bind_key("right", self.next_file)
+        self.viewer.bind_key("left", self.previous_file)
 
         self.add_connections()
 
@@ -329,21 +329,21 @@ class KeypointAnnotatorWidget(QWidget):
             if btn.text() == self.selected_keypoint:
                 btn.setChecked(True)
 
-    def cycle_keypoint_on_add(self, event=None):
-        print(f"selected keypoint: {self.selected_keypoint}")
-        current_idx = KEYPOINTS.index(self.selected_keypoint)
-        new_idx = current_idx + 1
-        if new_idx >= len(KEYPOINTS):
-            new_idx = 0
+    # def cycle_keypoint_on_add(self, event=None):
+    #     print(f"selected keypoint: {self.selected_keypoint}")
+    #     current_idx = KEYPOINTS.index(self.selected_keypoint)
+    #     new_idx = current_idx + 1
+    #     if new_idx >= len(KEYPOINTS):
+    #         new_idx = 0
 
-        self.selected_keypoint = KEYPOINTS[new_idx]
-        print(f"new selected keypoint: {self.selected_keypoint}")
-        self.update_point_tool_color()
+    #     self.selected_keypoint = KEYPOINTS[new_idx]
+    #     print(f"new selected keypoint: {self.selected_keypoint}")
+    #     self.update_point_tool_color()
 
-        # Update the radio buttons
-        for btn in self.keypoint_buttons.buttons():
-            if btn.text() == self.selected_keypoint:
-                btn.setChecked(True)
+    #     # Update the radio buttons
+    #     for btn in self.keypoint_buttons.buttons():
+    #         if btn.text() == self.selected_keypoint:
+    #             btn.setChecked(True)
 
     def add_annotation_layer(self):
         if self.selected_reference_layer == "":
@@ -379,10 +379,10 @@ class KeypointAnnotatorWidget(QWidget):
 
             self.update_point_tool_color()
 
-            # Cycle through keypoints when a point is added
-            self.viewer.layers[
-                self.selected_annotation_layer
-            ].events.data.connect(self.cycle_keypoint_on_add)
+            # # Cycle through keypoints when a point is added
+            # self.viewer.layers[
+            #     self.selected_annotation_layer
+            # ].events.data.connect(self.cycle_keypoint_on_add)
 
     def on_keypoint_selected(self, checked):
         radio_button = self.sender()
