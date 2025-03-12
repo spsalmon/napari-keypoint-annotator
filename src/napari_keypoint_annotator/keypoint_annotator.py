@@ -5,6 +5,7 @@ import napari
 import numpy as np
 import pandas as pd
 from magicgui.widgets import create_widget
+from napari.layers.points._points_constants import Mode
 from napari_guitils.gui_structures import TabSet, VHGroup
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
@@ -323,10 +324,14 @@ class KeypointAnnotatorWidget(QWidget):
                 ndim=3 if z_dim else 2,
                 size=2,
             )
+
             print(
                 f"Annotation layer added with {'3D' if z_dim else '2D'} capabilities."
             )
             self.selected_annotation_layer = self.annotation_layer.name
+
+            # change the mode to add points
+            self.viewer.layers[self.selected_annotation_layer].mode = Mode.ADD
 
             self.update_point_tool_color()
 
@@ -481,6 +486,9 @@ class KeypointAnnotatorWidget(QWidget):
                     annotation_layer.face_color[-1] = (
                         self.keypoint_values_to_color[row["KeypointID"]]
                     )
+
+                    # unselect the point
+                    annotation_layer.selected_data = []
         else:
             for _, row in annotations_df.iterrows():
                 point = [
@@ -497,6 +505,9 @@ class KeypointAnnotatorWidget(QWidget):
                     self.keypoint_values_to_color[row["KeypointID"]]
                 )
 
+                # unselect the point
+                annotation_layer.selected_data = []
+
         print(f"Loaded {annotations_df.shape[0]} annotations")
 
     def _load_file(self):
@@ -511,6 +522,8 @@ class KeypointAnnotatorWidget(QWidget):
         self.viewer.open(reference_file)
         if annotation_file != "":
             self._load_annotations(annotation_file)
+        else:
+            self.add_annotation_layer()
 
     def load_files(self):
         reference_dir = self.reference_dir_edit.text()
@@ -594,6 +607,15 @@ class KeypointAnnotatorWidget(QWidget):
 
         self.current_file_idx += 1
         self._load_file()
+
+        output_dir = self.annotation_dir_edit.text()
+        name = os.path.splitext(
+            os.path.basename(self.reference_files[self.current_file_idx])
+        )[0]
+        output_path = os.path.join(output_dir, f"{name}.csv")
+
+        if not os.path.exists(output_path):
+            self.save_annotations_project()
 
     def previous_file(self, event):
         if self.current_file_idx <= 0:
