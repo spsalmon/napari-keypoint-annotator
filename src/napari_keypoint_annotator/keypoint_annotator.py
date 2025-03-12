@@ -386,11 +386,9 @@ class KeypointAnnotatorWidget(QWidget):
             if btn.text() == self.selected_keypoint:
                 btn.setChecked(True)
 
-    def cycle_down_on_click(self, event):
-        if self.selected_annotation_layer != "":
-            layer = self.viewer.layers[self.selected_annotation_layer]
-            if layer.mode == Mode.ADD:
-                self.cycle_keypoint_down(event)
+    def cycle_down_on_click(self, layer, event):
+        if layer.mode == Mode.ADD:
+            self.cycle_keypoint_down(event)
 
     def save_annotations(self):
         annotations_df = self._convert_point_layer_to_df()
