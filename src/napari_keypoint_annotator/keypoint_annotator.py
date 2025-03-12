@@ -335,9 +335,10 @@ class KeypointAnnotatorWidget(QWidget):
 
             self.update_point_tool_color()
 
+            # Cycle through keypoints when a point is added
             self.viewer.layers[
                 self.selected_annotation_layer
-            ].mouse_drag_callbacks.append(self.cycle_down_on_click)
+            ].events.data.connect(self.cycle_down_on_click)
 
     def on_keypoint_selected(self, checked):
         radio_button = self.sender()
