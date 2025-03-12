@@ -301,6 +301,38 @@ class KeypointAnnotatorWidget(QWidget):
             else:
                 self.axes_order.setText("YX")
 
+    def cycle_keypoint_down(self, event=None):
+        current_idx = KEYPOINTS.index(self.selected_keypoint)
+        new_idx = current_idx + 1
+        if new_idx >= len(KEYPOINTS):
+            new_idx = 0
+
+        self.selected_keypoint = KEYPOINTS[new_idx]
+        self.update_point_tool_color()
+
+        # Update the radio buttons
+        for btn in self.keypoint_buttons.buttons():
+            if btn.text() == self.selected_keypoint:
+                btn.setChecked(True)
+
+    def cycle_keypoint_up(self, event):
+        current_idx = KEYPOINTS.index(self.selected_keypoint)
+        new_idx = current_idx - 1
+        if new_idx < 0:
+            new_idx = len(KEYPOINTS) - 1
+
+        self.selected_keypoint = KEYPOINTS[new_idx]
+        self.update_point_tool_color()
+
+        # Update the radio buttons
+        for btn in self.keypoint_buttons.buttons():
+            if btn.text() == self.selected_keypoint:
+                btn.setChecked(True)
+
+    # def cycle_down_on_add(self):
+    #     event = None
+    #     self.cycle_keypoint_down(event)
+
     def add_annotation_layer(self):
         if self.selected_reference_layer == "":
             print("No reference layer found")
@@ -338,7 +370,7 @@ class KeypointAnnotatorWidget(QWidget):
             # Cycle through keypoints when a point is added
             self.viewer.layers[
                 self.selected_annotation_layer
-            ].events.data.connect(self.cycle_down_on_click)
+            ].events.data.connect(self.cycle_keypoint_down)
 
     def on_keypoint_selected(self, checked):
         radio_button = self.sender()
@@ -358,38 +390,6 @@ class KeypointAnnotatorWidget(QWidget):
         print(
             f"Ready to add points with color {self.keypoint_colors[self.selected_keypoint]} for keypoint {self.selected_keypoint}."
         )
-
-    def cycle_keypoint_down(self, event):
-        current_idx = KEYPOINTS.index(self.selected_keypoint)
-        new_idx = current_idx + 1
-        if new_idx >= len(KEYPOINTS):
-            new_idx = 0
-
-        self.selected_keypoint = KEYPOINTS[new_idx]
-        self.update_point_tool_color()
-
-        # Update the radio buttons
-        for btn in self.keypoint_buttons.buttons():
-            if btn.text() == self.selected_keypoint:
-                btn.setChecked(True)
-
-    def cycle_keypoint_up(self, event):
-        current_idx = KEYPOINTS.index(self.selected_keypoint)
-        new_idx = current_idx - 1
-        if new_idx < 0:
-            new_idx = len(KEYPOINTS) - 1
-
-        self.selected_keypoint = KEYPOINTS[new_idx]
-        self.update_point_tool_color()
-
-        # Update the radio buttons
-        for btn in self.keypoint_buttons.buttons():
-            if btn.text() == self.selected_keypoint:
-                btn.setChecked(True)
-
-    def cycle_down_on_add(self):
-        event = None
-        self.cycle_keypoint_down(event)
 
     def save_annotations(self):
         annotations_df = self._convert_point_layer_to_df()
