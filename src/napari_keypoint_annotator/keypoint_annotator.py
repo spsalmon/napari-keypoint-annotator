@@ -445,15 +445,28 @@ class KeypointAnnotatorWidget(QWidget):
                     "Name": keypoint_name,
                     "KeypointID": keypoint_value,
                     self.axes_order.text()[0]: point[0],
-                    self.axes_order.text()[1]: point[1],
-                    self.axes_order.text()[2]: point[2],
+                    # normalize the point position as a percentage of the image size
+                    self.axes_order.text()[1]: point[1]
+                    / self.viewer.layers[
+                        self.selected_reference_layer
+                    ].data.shape[1],
+                    self.axes_order.text()[2]: point[2]
+                    / self.viewer.layers[
+                        self.selected_reference_layer
+                    ].data.shape[2],
                 }
             else:
                 row = {
                     "Name": keypoint_name,
                     "KeypointID": keypoint_value,
-                    self.axes_order.text()[0]: point[0],
-                    self.axes_order.text()[1]: point[1],
+                    self.axes_order.text()[0]: point[0]
+                    / self.viewer.layers[
+                        self.selected_reference_layer
+                    ].data.shape[0],
+                    self.axes_order.text()[1]: point[1]
+                    / self.viewer.layers[
+                        self.selected_reference_layer
+                    ].data.shape[1],
                 }
             rows.append(row)
 
